@@ -1,0 +1,30 @@
+{
+  "services" : [
+    {
+      "name": "db",
+      "type": "db",
+      "driver": "pgsql",
+      "username": "postgres",
+      "password": "postgres",
+      "host": "localhost",
+      "port": "5432",
+      "database": "tresor"
+    },
+    {
+      "name": "storage",
+      "type": "storage",
+      "driver": "fs",
+      "rebuild": "true",
+      "volumes": [
+        {
+          "name": "sample",
+          "path": "~/archive/sample"
+        },
+        {
+          "name": "dicom",
+          "path": "~/Bilder/500 Patients"
+        }
+      ]
+    }
+  ]
+}
