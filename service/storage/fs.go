@@ -21,6 +21,8 @@ import (
 	"os"
 
 	"github.com/mpetavy/common"
+	"github.com/mpetavy/go-dicom"
+	"github.com/mpetavy/go-dicom/dicomtag"
 	"github.com/mpetavy/tresor/cache"
 	"github.com/mpetavy/tresor/hash"
 )
@@ -401,14 +403,15 @@ func (fs *Fs) Delete(suid string, options *Options) error {
 func (fs *Fs) rebuildBucket(wg *sync.WaitGroup, uid *FsUID) {
 	defer wg.Done()
 
-	bucket := models.Bucket{}
+	bucket := models.NewBucket()
 	bucket.Uid = uid.String()
 
-	buffer := bytes.NewBuffer(make([]byte, 0, common.MIME_TYPE_HEADER_LEN))
+	buffer := bytes.Buffer{}
 
-	h, n, err := fs.Load(uid.String(), buffer, nil)
+	h, n, err := fs.Load(uid.String(), &buffer, nil)
 	if err != nil {
 		common.Error(err)
+		return
 	}
 
 	bucket.FileName = append(bucket.FileName, uid.String())
@@ -417,6 +420,21 @@ func (fs *Fs) rebuildBucket(wg *sync.WaitGroup, uid *FsUID) {
 	mimeType, _ := common.DetectMimeType(buffer.Bytes())
 	if len(mimeType) > 0 {
 		bucket.FileType = append(bucket.FileType, mimeType)
+	}
+
+	if mimeType == "application/dicom" {
+		dataset, err := dicom.ReadDataSetInBytes(buffer.Bytes(), dicom.ReadOptions{DropPixelData: true})
+		if err == nil {
+			for _, elem := range dataset.Elements {
+				v, err := elem.GetString()
+				if err == nil {
+					tn, err := dicomtag.FindTagInfo(elem.Tag)
+					if err == nil {
+						bucket.Prop[tn.Name] = v
+					}
+				}
+			}
+		}
 	}
 
 	bucket.FileLen = append(bucket.FileLen, n)

@@ -10,3 +10,9 @@ type User struct {
 	Name     string `storm:"unique"`
 	Password string
 }
+
+func NewUser() User {
+	u := User{}
+
+	return u
+}

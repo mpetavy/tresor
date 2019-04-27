@@ -634,7 +634,7 @@ func (sha *Sha) Delete(suid string, options *Options) error {
 func (sha *Sha) rebuildBucket(wg *sync.WaitGroup, uid *ShaUID, version int) {
 	defer wg.Done()
 
-	bucket := models.Bucket{}
+	bucket := models.NewBucket()
 	bucket.Uid = uid.String()
 
 	buffer := bytes.NewBuffer(make([]byte, 0, common.MIME_TYPE_HEADER_LEN))
@@ -663,7 +663,6 @@ func (sha *Sha) rebuildBucket(wg *sync.WaitGroup, uid *ShaUID, version int) {
 		bucket.FileLen = append(bucket.FileLen, n)
 
 		common.Debug("%s: %s", (*uid).String(), hex.EncodeToString(*h))
-
 	}
 
 	orm := *database.Get("db")
