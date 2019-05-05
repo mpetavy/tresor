@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	"github.com/mpetavy/tresor/service/errors"
+	"github.com/mpetavy/tresor/service/index"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -62,6 +63,11 @@ func InitServices(router *mux.Router) error {
 			}
 		case database.TYPE:
 			err := database.Init(serviceName, serviceCfg)
+			if err != nil {
+				return err
+			}
+		case index.TYPE:
+			err := index.Init(serviceName, serviceCfg, router)
 			if err != nil {
 				return err
 			}
