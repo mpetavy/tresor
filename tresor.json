@@ -1,6 +1,22 @@
 {
   "services" : [
     {
+      "name": "index",
+      "type": "index",
+      "driver": "",
+      "rebuild": "true",
+      "volumes": [
+        {
+          "name": "sample",
+          "path": "~/archive/sample"
+        },
+        {
+          "name": "dicom",
+          "path": "~/Bilder/500 Patients"
+        }
+      ]
+    },
+    {
       "name": "db",
       "type": "db",
       "driver": "pgsql",

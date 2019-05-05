@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"container/list"
 	"encoding/hex"
+	"github.com/mpetavy/tresor/service/index"
 	"io"
 	"io/ioutil"
 	"reflect"
@@ -21,8 +22,6 @@ import (
 	"os"
 
 	"github.com/mpetavy/common"
-	"github.com/mpetavy/go-dicom"
-	"github.com/mpetavy/go-dicom/dicomtag"
 	"github.com/mpetavy/tresor/cache"
 	"github.com/mpetavy/tresor/hash"
 )
@@ -417,24 +416,17 @@ func (fs *Fs) rebuildBucket(wg *sync.WaitGroup, uid *FsUID) {
 	bucket.FileName = append(bucket.FileName, uid.String())
 	bucket.FileHash = append(bucket.FileHash, hex.EncodeToString(*h))
 
-	mimeType, _ := common.DetectMimeType(buffer.Bytes())
+	b := buffer.Bytes()
+	indexer := *index.Get("index")
+	mimeType, m, err := indexer.Index(&b, nil)
+	index.Put("index", &indexer)
+
 	if len(mimeType) > 0 {
 		bucket.FileType = append(bucket.FileType, mimeType)
 	}
 
-	if mimeType == "application/dicom" {
-		dataset, err := dicom.ReadDataSetInBytes(buffer.Bytes(), dicom.ReadOptions{DropPixelData: true})
-		if err == nil {
-			for _, elem := range dataset.Elements {
-				v, err := elem.GetString()
-				if err == nil {
-					tn, err := dicomtag.FindTagInfo(elem.Tag)
-					if err == nil {
-						bucket.Prop[tn.Name] = v
-					}
-				}
-			}
-		}
+	for k, v := range *m {
+		bucket.Prop[k] = v
 	}
 
 	bucket.FileLen = append(bucket.FileLen, n)
