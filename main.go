@@ -1,9 +1,8 @@
 package main
 
 import (
-	"flag"
-
 	"context"
+	"flag"
 	"net/http"
 	"time"
 
@@ -47,6 +46,9 @@ func start() error {
 		MaxHeaderBytes: 1 << 20,
 	}
 
+	pathPrefix := "/static/"
+	router.PathPrefix(pathPrefix).Handler(http.StripPrefix(pathPrefix, http.FileServer(http.Dir("./"))))
+
 	go func(err *error) {
 		*err = server.ListenAndServe()
 	}(&err)
@@ -77,6 +79,6 @@ func stop() error {
 func main() {
 	defer common.Cleanup()
 
-	common.New(&common.App{"tresor", "0.0.1", "2018", "archive solution", "mpetavy", common.APACHE, "https://github.com/golang/mpetavy/golang/tresor", true, nil,start, stop, nil, time.Duration(0)}, nil)
+	common.New(&common.App{"tresor", "0.0.1", "2018", "archive solution", "mpetavy", common.APACHE, "https://github.com/golang/mpetavy/golang/tresor", true, nil, start, stop, nil, time.Duration(0)}, nil)
 	common.Run()
 }

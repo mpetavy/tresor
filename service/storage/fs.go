@@ -36,11 +36,16 @@ type FsUID struct {
 }
 
 func NewFsUID(path string) *FsUID {
-	return &FsUID{Path: path}
+	uid, _ := ParseFsUID(path)
+
+	return uid
 }
 
-func ParseFsUID(s string) (*FsUID, error) {
-	return &FsUID{common.CleanPath(s)}, nil
+func ParseFsUID(path string) (*FsUID, error) {
+	path = strings.Replace(path, "\\", "/", -1)
+	path = strings.Replace(path, "@", string(filepath.Separator), -1)
+
+	return &FsUID{path}, nil
 }
 
 func (uid *FsUID) String() string {
@@ -432,10 +437,10 @@ func (fs *Fs) rebuildBucket(wg *sync.WaitGroup, uid *FsUID) {
 	bucket.FileLen = append(bucket.FileLen, n)
 
 	common.Debug("%s: %s", (*uid).String(), hex.EncodeToString(*h))
+
 	err = database.Exec("db", func(db *database.Database) error {
 		return (*db).SaveBucket(&bucket, nil)
 	})
-
 	if err != nil {
 		common.Error(err)
 		return
@@ -464,7 +469,7 @@ func (fs *Fs) Rebuild() (int, error) {
 			err := filepath.Walk(volume.Path, func(path string, info os.FileInfo, err error) error {
 				if !info.IsDir() {
 					c++
-					path = path[len(volume.Path):]
+					path = path[len(volume.Path)+1:]
 
 					wg.Add(1)
 					go fs.rebuildBucket(&wg, NewFsUID(path))

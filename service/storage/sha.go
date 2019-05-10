@@ -665,10 +665,9 @@ func (sha *Sha) rebuildBucket(wg *sync.WaitGroup, uid *ShaUID, version int) {
 		common.Debug("%s: %s", (*uid).String(), hex.EncodeToString(*h))
 	}
 
-	orm := *database.Get("db")
-	err := orm.SaveBucket(&bucket, nil)
-	database.Put("db", &orm)
-
+	err := database.Exec("db", func(db *database.Database) error {
+		return (*db).SaveBucket(&bucket, nil)
+	})
 	if err != nil {
 		common.Error(err)
 		return
@@ -686,8 +685,6 @@ loop_id:
 	for id := 1; true; id++ {
 	loop_version:
 		for version := 1; ; version++ {
-			c++
-
 			uid := NewShaUID(id, version, "")
 
 			_, _, err := sha.find(uid, nil)
@@ -698,6 +695,8 @@ loop_id:
 					break loop_version
 				}
 			}
+
+			c++
 
 			wg.Add(1)
 			go sha.rebuildBucket(&wg, uid, version)
