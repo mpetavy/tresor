@@ -63,7 +63,7 @@ func (db *PgsqlDB) CreateSchema(models []interface{}) error {
 		}
 
 		for _, f := range structs.Fields(model) {
-			tag := f.Tag("sqlindex")
+			tag := f.Tag("sqlx")
 
 			if tag != "" {
 				tableName := structs.Name(model) + "s"

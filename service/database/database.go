@@ -95,6 +95,13 @@ func Put(name string, db *Database) {
 	*(i.pool) <- db
 }
 
+func Exec(name string, fn func(db *Database) error) error {
+	db := Get(name)
+	defer Put(name, db)
+
+	return fn(db)
+}
+
 func create(cfg *common.Jason) (*Database, error) {
 	driver, err := cfg.String("driver")
 	if err != nil {
