@@ -3,18 +3,7 @@
     {
       "name": "index",
       "type": "index",
-      "driver": "",
-      "rebuild": "true",
-      "volumes": [
-        {
-          "name": "sample",
-          "path": "~/archive/sample"
-        },
-        {
-          "name": "dicom",
-          "path": "~/Bilder/500 Patients"
-        }
-      ]
+      "driver": ""
     },
     {
       "name": "db",
@@ -33,14 +22,24 @@
       "rebuild": "true",
       "volumes": [
         {
-          "name": "sample",
-          "path": "~/archive/sample"
-        },
-        {
           "name": "dicom",
           "path": "~/Bilder/500 Patients"
         }
       ]
     }
+//    {
+//      "name": "storage",
+//      "type": "storage",
+//      "driver": "sha",
+//      "rebuild": "true",
+//      "volumes": [
+//        {
+//          "name": "sample",
+//          "path": "~/archive/sample",
+//          "flat": "true",
+//          "zip": "true"
+//        }
+//      ]
+//    }
   ]
 }
