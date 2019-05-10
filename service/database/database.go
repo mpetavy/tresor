@@ -25,6 +25,7 @@ type Database interface {
 	Stop() error
 
 	CreateSchema([]interface{}) error
+	SwitchIndices(models []interface{}, enable bool) error
 
 	SaveBucket(doc *models.Bucket, options *Options) error
 	LoadBucket(field string, value interface{}, doc *models.Bucket, options *Options) error

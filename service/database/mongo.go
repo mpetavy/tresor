@@ -49,6 +49,10 @@ func (db *MongoDB) CreateSchema([]interface{}) error {
 	return nil
 }
 
+func (db *MongoDB) SwitchIndices(models []interface{}, enable bool) error {
+	return nil
+}
+
 func (db *MongoDB) Start() error {
 	var err error
 

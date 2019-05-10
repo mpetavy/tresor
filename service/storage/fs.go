@@ -447,6 +447,13 @@ func (fs *Fs) Rebuild() (int, error) {
 	cluster.Lock(cluster.STORAGE(fs.name))
 	defer cluster.Unlock(cluster.STORAGE(fs.name))
 
+	orm := *database.Get("db")
+	err := orm.SwitchIndices([]interface{}{models.NewBucket()}, false)
+	if err != nil {
+		return -1, err
+	}
+	defer orm.SwitchIndices([]interface{}{models.NewBucket()}, true)
+
 	c := 0
 	wg := sync.WaitGroup{}
 

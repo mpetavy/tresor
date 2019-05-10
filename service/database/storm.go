@@ -29,6 +29,10 @@ func (db *StormDB) CreateSchema([]interface{}) error {
 	return nil
 }
 
+func (db *StormDB) SwitchIndices(models []interface{}, enable bool) error {
+	return nil
+}
+
 func (db *StormDB) Start() error {
 	x, err := storm.Open(db.Path)
 	db.DB = x

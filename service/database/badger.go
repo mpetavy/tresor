@@ -29,6 +29,10 @@ func (db *BadgerDB) CreateSchema([]interface{}) error {
 	return nil
 }
 
+func (db *BadgerDB) SwitchIndices(models []interface{}, enable bool) error {
+	return nil
+}
+
 func (db *BadgerDB) Start() error {
 	opts := badger.DefaultOptions
 	opts.Dir = db.Path
