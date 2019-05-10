@@ -432,10 +432,9 @@ func (fs *Fs) rebuildBucket(wg *sync.WaitGroup, uid *FsUID) {
 	bucket.FileLen = append(bucket.FileLen, n)
 
 	common.Debug("%s: %s", (*uid).String(), hex.EncodeToString(*h))
-
-	orm := *database.Get("db")
-	err = orm.SaveBucket(&bucket, nil)
-	database.Put("db", &orm)
+	err = database.Exec("db", func(db *database.Database) error {
+		return (*db).SaveBucket(&bucket, nil)
+	})
 
 	if err != nil {
 		common.Error(err)
@@ -447,12 +446,15 @@ func (fs *Fs) Rebuild() (int, error) {
 	cluster.Lock(cluster.STORAGE(fs.name))
 	defer cluster.Unlock(cluster.STORAGE(fs.name))
 
-	orm := *database.Get("db")
-	err := orm.SwitchIndices([]interface{}{models.NewBucket()}, false)
+	err := database.Exec("db", func(db *database.Database) error {
+		return (*db).SwitchIndices([]interface{}{models.NewBucket()}, false)
+	})
 	if err != nil {
 		return -1, err
 	}
-	defer orm.SwitchIndices([]interface{}{models.NewBucket()}, true)
+	defer common.Error(database.Exec("db", func(db *database.Database) error {
+		return (*db).SwitchIndices([]interface{}{models.NewBucket()}, true)
+	}))
 
 	c := 0
 	wg := sync.WaitGroup{}

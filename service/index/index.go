@@ -91,6 +91,13 @@ func Put(name string, index *Index) {
 	*(i.pool) <- index
 }
 
+func Exec(name string, fn func(index *Index) error) error {
+	index := Get(name)
+	defer Put(name, index)
+
+	return fn(index)
+}
+
 func create(cfg *common.Jason) (*Index, error) {
 	driver, err := cfg.String("driver")
 	if err != nil {

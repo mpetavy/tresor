@@ -120,6 +120,13 @@ func Put(name string, storage *Storage) {
 	*(i.pool) <- storage
 }
 
+func Exec(name string, fn func(storage *Storage) error) error {
+	storage := Get(name)
+	defer Put(name, storage)
+
+	return fn(storage)
+}
+
 func create(cfg *common.Jason) (*Storage, error) {
 	driver, err := cfg.String("driver")
 	if err != nil {

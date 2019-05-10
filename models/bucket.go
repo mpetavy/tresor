@@ -14,9 +14,9 @@ import (
 type Bucket struct {
 	Base     `storm:"inline"`
 	Uid      string            `sql:",unique" storm:",unique"`
-	Prop     map[string]string `sql:",hstore" sqlindex:"gin"`
-	FileName []string          `sql:",array" sqlindex:"gin"`
-	FileType []string          `sql:",array" sqlindex:"gin"`
+	Prop     map[string]string `sql:",hstore" sqlx:"gin"`
+	FileName []string          `sql:",array" sqlx:"gin"`
+	FileType []string          `sql:",array" sqlx:"gin"`
 	FileLen  []int64           `sql:",array"`
 	FileHash []string          `sql:",array"`
 }
