@@ -26,7 +26,7 @@ type Storage interface {
 	Stop() error
 	Rebuild() (int, error)
 	Store(string, io.Reader, *Options) (string, *[]byte, error)
-	Load(string, io.Writer, *Options) (*[]byte, int64, error)
+	Load(string, io.Writer, *Options) (string, *[]byte, int64, error)
 	Delete(string, *Options) error
 }
 
@@ -60,7 +60,7 @@ func Init(name string, cfg *common.Jason, router *mux.Router) error {
 		storage := Get(name)
 		defer Put(name, storage)
 
-		_, _, err := (*storage).Load(v["uid"], rw, nil)
+		_,_, _, err := (*storage).Load(v["uid"], rw, nil)
 		if err != nil {
 			common.Error(err)
 

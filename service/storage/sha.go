@@ -537,10 +537,10 @@ func (sha *Sha) Store(suid string, source io.Reader, options *Options) (string, 
 	return uid.String(), &digest, nil
 }
 
-func (sha *Sha) Load(suid string, dest io.Writer, options *Options) (*[]byte, int64, error) {
+func (sha *Sha) Load(suid string, dest io.Writer, options *Options) (string,*[]byte, int64, error) {
 	uid, err := ParseShaUID(suid)
 	if err != nil {
-		return nil, -1, err
+		return "",nil, -1, err
 	}
 
 	cluster.Lock(cluster.STORAGE_UID(sha.name, strconv.Itoa(uid.Id)))
@@ -548,28 +548,28 @@ func (sha *Sha) Load(suid string, dest io.Writer, options *Options) (*[]byte, in
 
 	_, path, err := sha.find(uid, options)
 	if err != nil {
-		return nil, -1, err
+		return "",nil, -1, err
 	}
 
 	source, err := os.Open(path)
 	if err != nil {
-		return nil, -1, err
+		return "",nil, -1, err
 	}
 	defer source.Close()
 
 	h, err := hash.New(hash.MD5)
 	if err != nil {
-		return nil, -1, err
+		return "",nil, -1, err
 	}
 
 	n, err := io.Copy(io.MultiWriter(dest, h), source)
 	if err != nil {
-		return nil, -1, err
+		return "",nil, -1, err
 	}
 
 	digest := h.Sum(nil)
 
-	return &digest, n, nil
+	return path,&digest, n, nil
 }
 
 func (sha *Sha) Delete(suid string, options *Options) error {
@@ -644,7 +644,7 @@ func (sha *Sha) rebuildBucket(wg *sync.WaitGroup, uid *ShaUID, version int) {
 
 		uid.Object = PAGE + "." + strconv.Itoa(page)
 
-		h, n, err := sha.Load(uid.String(), buffer, nil)
+		_,h, n, err := sha.Load(uid.String(), buffer, nil)
 		if err != nil {
 			if page == 1 {
 				common.Error(err)
