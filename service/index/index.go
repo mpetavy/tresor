@@ -20,7 +20,7 @@ type Index interface {
 	Init(*common.Jason) error
 	Start() error
 	Stop() error
-	Index(*[]byte, *Options) (string, *Mapping, error)
+	Index(file string, options *Options) (string, *Mapping, *[]byte, error)
 }
 
 type instance struct {
@@ -107,8 +107,8 @@ func create(cfg *common.Jason) (*Index, error) {
 	var index Index
 
 	switch driver {
-	case DEFAULT_MAPPER:
-		index, err = NewDefaultMapper()
+	case DEFAULT_INDEXER:
+		index, err = NewDefaultIndexer()
 		if err != nil {
 			return nil, err
 		}
