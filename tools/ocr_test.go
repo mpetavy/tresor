@@ -14,7 +14,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestOcr(t *testing.T) {
-	txt,orientation,err := Ocr("c:\\Tesseract-OCR","deu","d:\\archive\\sample\\15\\page.1")
+	txt,orientation,err := Ocr("deu","d:\\archive\\sample\\15\\page.1")
 	if err != nil {
 		t.Fatal(err)
 	}
