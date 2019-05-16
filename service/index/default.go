@@ -1,9 +1,11 @@
 package index
 
 import (
+	"fmt"
 	"github.com/mpetavy/common"
 	"github.com/mpetavy/go-dicom"
 	"github.com/mpetavy/go-dicom/dicomtag"
+	"github.com/mpetavy/tresor/tools"
 	"io/ioutil"
 	"os"
 )
@@ -38,12 +40,19 @@ func (defaultIndexer *DefaultIndexer) Stop() error {
 	return nil
 }
 
-func (defaultIndexer *DefaultIndexer) indexDicom(path string,options *Options) (*Mapping, *[]byte,error) {
+func (defaultIndexer *DefaultIndexer) indexDicom(path string,buffer []byte,options *Options) (*Mapping, *[]byte,error) {
 	mapping := make(Mapping)
 
 	var imageFile *os.File
+	var dataset *dicom.DataSet
+	var err error
 
-	dataset, err := dicom.ReadDataSetFromFile(path, dicom.ReadOptions{})
+	if len(buffer) > 0 {
+		dataset, err = dicom.ReadDataSetInBytes(buffer, dicom.ReadOptions{})
+	} else {
+		dataset, err = dicom.ReadDataSetFromFile(path, dicom.ReadOptions{})
+	}
+
 	if err == nil {
 		representativeFrameNumber := 0
 
@@ -94,18 +103,43 @@ func (defaultIndexer *DefaultIndexer) Index(path string,options *Options) (strin
 	var mimeType string
 	var mapping *Mapping
 	var thumbnail *[]byte
+	var buffer []byte
 
-	header,err := common.ReadHeader(path)
+	s,err := common.FileSize(path)
 	if err != nil {
 		return mimeType, mapping, thumbnail,err
 	}
 
-	mimeType, _ = common.DetectMimeType(header)
+	readComplete := s < 1024 * 1024
+
+	if readComplete {
+		buffer,err = ioutil.ReadFile(path)
+	} else {
+		buffer,err = common.ReadHeader(path)
+	}
+	if err != nil {
+		return mimeType, mapping, thumbnail,err
+	}
+
+	mimeType, _ = common.DetectMimeType(buffer)
+
+	if !readComplete {
+		buffer = buffer[0:0]
+	}
 
 	if common.IsImageMimeType(mimeType) {
+		txt,orientation,err := tools.Ocr(path)
+		if err != nil {
+			return mimeType, mapping, thumbnail,err
+		}
+
+		fmt.Println(txt)
+		fmt.Println(orientation)
+
 	} else {
-		if mimeType == "application/dicom" {
-			mapping, thumbnail, err = defaultIndexer.indexDicom(path, options)
+		switch mimeType {
+		case common.MIMETYPE_APPLICATION_DICOM.MimeType:
+			mapping, thumbnail, err = defaultIndexer.indexDicom(path, buffer,options)
 		}
 	}
 

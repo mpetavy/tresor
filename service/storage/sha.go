@@ -1,9 +1,9 @@
 package storage
 
 import (
-	"bytes"
 	"container/list"
 	"encoding/hex"
+	"github.com/mpetavy/tresor/service/index"
 	"io"
 	"io/ioutil"
 	"reflect"
@@ -637,14 +637,10 @@ func (sha *Sha) rebuildBucket(wg *sync.WaitGroup, uid *ShaUID, version int) {
 	bucket := models.NewBucket()
 	bucket.Uid = uid.String()
 
-	buffer := bytes.NewBuffer(make([]byte, 0, common.MIME_TYPE_HEADER_LEN))
-
 	for page := 1; ; page++ {
-		buffer.Reset()
-
 		uid.Object = PAGE + "." + strconv.Itoa(page)
 
-		_,h, n, err := sha.Load(uid.String(), buffer, nil)
+		path,h, n, err := sha.Load(uid.String(), ioutil.Discard, nil)
 		if err != nil {
 			if page == 1 {
 				common.Error(err)
@@ -655,11 +651,21 @@ func (sha *Sha) rebuildBucket(wg *sync.WaitGroup, uid *ShaUID, version int) {
 		bucket.FileName = append(bucket.FileName, uid.Object)
 		bucket.FileHash = append(bucket.FileHash, hex.EncodeToString(*h))
 
-		mimeType, _ := common.DetectMimeType(buffer.Bytes())
-		if len(mimeType) > 0 {
-			bucket.FileType = append(bucket.FileType, mimeType)
+		var mimeType string
+		var mapping *index.Mapping
+		var thumbnail *[]byte
+
+		err = index.Exec("index", func(index *index.Index) error {
+			mimeType,mapping,thumbnail,err = (*index).Index(path,nil)
+
+			return err
+		})
+		if err != nil {
+			common.Error(err)
+			return
 		}
 
+		bucket.FileType = append(bucket.FileType, mimeType)
 		bucket.FileLen = append(bucket.FileLen, n)
 
 		common.Debug("%s: %s", (*uid).String(), hex.EncodeToString(*h))

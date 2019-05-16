@@ -15,31 +15,31 @@
       "port": "5432",
       "database": "tresor"
     },
-    {
-      "name": "storage",
-      "type": "storage",
-      "driver": "fs",
-      "rebuild": "true",
-      "volumes": [
-        {
-          "name": "dicom",
-          "path": "~/Bilder/500 Patients"
-        }
-      ]
-    }
 //    {
 //      "name": "storage",
 //      "type": "storage",
-//      "driver": "sha",
+//      "driver": "fs",
 //      "rebuild": "true",
 //      "volumes": [
 //        {
-//          "name": "sample",
-//          "path": "~/archive/sample",
-//          "flat": "true",
-//          "zip": "true"
+//          "name": "dicom",
+//          "path": "~/Bilder/500 Patients"
 //        }
 //      ]
 //    }
+    {
+      "name": "storage",
+      "type": "storage",
+      "driver": "sha",
+      "rebuild": "true",
+      "volumes": [
+        {
+          "name": "sample",
+          "path": "~/archive/sample",
+          "flat": "true",
+          "zip": "true"
+        }
+      ]
+    }
   ]
 }

@@ -425,11 +425,12 @@ func (fs *Fs) rebuildBucket(wg *sync.WaitGroup, uid *FsUID) {
 	var mapping *index.Mapping
 	var thumbnail *[]byte
 
-	if index.Exec("index", func(index *index.Index) error {
+	err = index.Exec("index", func(index *index.Index) error {
 		mimeType,mapping,thumbnail,err = (*index).Index(path,nil)
 
 		return err
-	}) != nil {
+	})
+	if err != nil {
 		common.Error(err)
 		return
 	}
