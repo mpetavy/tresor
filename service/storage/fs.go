@@ -313,7 +313,7 @@ func (fs *Fs) Store(suid string, source io.Reader, options *Options) (string, *[
 func (fs *Fs) Load(suid string, dest io.Writer, options *Options) (string, *[]byte, int64, error) {
 	uid, err := ParseFsUID(suid)
 	if err != nil {
-		return "",nil, -1, err
+		return "", nil, -1, err
 	}
 
 	cluster.Lock(cluster.STORAGE_UID(fs.name, uid.Path))
@@ -321,28 +321,28 @@ func (fs *Fs) Load(suid string, dest io.Writer, options *Options) (string, *[]by
 
 	_, path, err := fs.find(uid, options)
 	if err != nil {
-		return "",nil, -1, err
+		return "", nil, -1, err
 	}
 
 	source, err := os.Open(path)
 	if err != nil {
-		return "",nil, -1, err
+		return "", nil, -1, err
 	}
 	defer source.Close()
 
 	h, err := hash.New(hash.MD5)
 	if err != nil {
-		return "",nil, -1, err
+		return "", nil, -1, err
 	}
 
 	n, err := io.Copy(io.MultiWriter(dest, h), source)
 	if err != nil {
-		return "",nil, -1, err
+		return "", nil, -1, err
 	}
 
 	digest := h.Sum(nil)
 
-	return path,&digest, n, nil
+	return path, &digest, n, nil
 }
 
 func (fs *Fs) Delete(suid string, options *Options) error {
@@ -412,7 +412,7 @@ func (fs *Fs) rebuildBucket(wg *sync.WaitGroup, uid *FsUID) {
 
 	buffer := bytes.Buffer{}
 
-	path,h, n, err := fs.Load(uid.String(), &buffer, nil)
+	path, h, n, err := fs.Load(uid.String(), &buffer, nil)
 	if err != nil {
 		common.Error(err)
 		return
@@ -424,9 +424,11 @@ func (fs *Fs) rebuildBucket(wg *sync.WaitGroup, uid *FsUID) {
 	var mimeType string
 	var mapping *index.Mapping
 	var thumbnail *[]byte
+	var fulltext string
+	var orientation int
 
 	err = index.Exec("index", func(index *index.Index) error {
-		mimeType,mapping,thumbnail,err = (*index).Index(path,nil)
+		mimeType, mapping, thumbnail, fulltext, orientation, err = (*index).Index(path, nil)
 
 		return err
 	})

@@ -632,9 +632,11 @@ func (sha *Sha) Delete(suid string, options *Options) error {
 }
 
 type indexResult struct {
-	mimeType  string
-	mapping   *index.Mapping
-	thumbnail *[]byte
+	mimeType    string
+	mapping     *index.Mapping
+	thumbnail   *[]byte
+	fulltext    string
+	orientation int
 }
 
 func (sha *Sha) rebuildBucket(wg *sync.WaitGroup, uid *ShaUID, version int) {
@@ -667,7 +669,7 @@ func (sha *Sha) rebuildBucket(wg *sync.WaitGroup, uid *ShaUID, version int) {
 			ir := indexResult{}
 
 			err = index.Exec("index", func(index *index.Index) error {
-				ir.mimeType, ir.mapping, ir.thumbnail, err = (*index).Index(path, nil)
+				ir.mimeType, ir.mapping, ir.thumbnail, ir.fulltext, ir.orientation, err = (*index).Index(path, nil)
 
 				return err
 			})

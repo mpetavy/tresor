@@ -1,7 +1,6 @@
 package index
 
 import (
-	"fmt"
 	"github.com/mpetavy/common"
 	"github.com/mpetavy/go-dicom"
 	"github.com/mpetavy/go-dicom/dicomtag"
@@ -40,7 +39,7 @@ func (defaultIndexer *DefaultIndexer) Stop() error {
 	return nil
 }
 
-func (defaultIndexer *DefaultIndexer) indexDicom(path string,buffer []byte,options *Options) (*Mapping, *[]byte,error) {
+func (defaultIndexer *DefaultIndexer) indexDicom(path string, buffer []byte, options *Options) (*Mapping, *[]byte, error) {
 	mapping := make(Mapping)
 
 	var imageFile *os.File
@@ -56,8 +55,8 @@ func (defaultIndexer *DefaultIndexer) indexDicom(path string,buffer []byte,optio
 	if err == nil {
 		representativeFrameNumber := 0
 
-		elem,err := dataset.FindElementByTag(dicomtag.RepresentativeFrameNumber)
-		if  err == nil {
+		elem, err := dataset.FindElementByTag(dicomtag.RepresentativeFrameNumber)
+		if err == nil {
 			representativeFrameNumber = elem.Value[0].(int)
 		}
 
@@ -68,14 +67,14 @@ func (defaultIndexer *DefaultIndexer) indexDicom(path string,buffer []byte,optio
 					if i == representativeFrameNumber {
 						var err error
 
-						imageFile,err = common.CreateTempFile()
+						imageFile, err = common.CreateTempFile()
 						if err != nil {
-							return nil,nil,err
+							return nil, nil, err
 						}
 
 						err = ioutil.WriteFile(imageFile.Name(), frame, os.ModePerm)
 						if err != nil {
-							return nil,nil,err
+							return nil, nil, err
 						}
 						break
 					}
@@ -95,30 +94,32 @@ func (defaultIndexer *DefaultIndexer) indexDicom(path string,buffer []byte,optio
 		defer common.FileDelete(imageFile.Name())
 	}
 
-	return &mapping,nil,err
+	return &mapping, nil, err
 }
 
-func (defaultIndexer *DefaultIndexer) Index(path string,options *Options) (string, *Mapping, *[]byte,error) {
+func (defaultIndexer *DefaultIndexer) Index(path string, options *Options) (string, *Mapping, *[]byte, string, int, error) {
 	var err error
 	var mimeType string
 	var mapping *Mapping
 	var thumbnail *[]byte
 	var buffer []byte
+	var fulltext string
+	var orientation int
 
-	s,err := common.FileSize(path)
+	s, err := common.FileSize(path)
 	if err != nil {
-		return mimeType, mapping, thumbnail,err
+		return mimeType, mapping, thumbnail, fulltext, orientation, err
 	}
 
-	readComplete := s < 1024 * 1024
+	readComplete := s < 1024*1024
 
 	if readComplete {
-		buffer,err = ioutil.ReadFile(path)
+		buffer, err = ioutil.ReadFile(path)
 	} else {
-		buffer,err = common.ReadHeader(path)
+		buffer, err = common.ReadHeader(path)
 	}
 	if err != nil {
-		return mimeType, mapping, thumbnail,err
+		return mimeType, mapping, thumbnail, fulltext, orientation, err
 	}
 
 	mimeType, _ = common.DetectMimeType(buffer)
@@ -128,20 +129,16 @@ func (defaultIndexer *DefaultIndexer) Index(path string,options *Options) (strin
 	}
 
 	if common.IsImageMimeType(mimeType) {
-		txt,orientation,err := tools.Ocr(path)
+		fulltext, orientation, err = tools.Ocr(path)
 		if err != nil {
-			return mimeType, mapping, thumbnail,err
+			return mimeType, mapping, thumbnail, fulltext, orientation, err
 		}
-
-		fmt.Println(txt)
-		fmt.Println(orientation)
-
 	} else {
 		switch mimeType {
 		case common.MIMETYPE_APPLICATION_DICOM.MimeType:
-			mapping, thumbnail, err = defaultIndexer.indexDicom(path, buffer,options)
+			mapping, thumbnail, err = defaultIndexer.indexDicom(path, buffer, options)
 		}
 	}
 
-	return mimeType, mapping, thumbnail,err
+	return mimeType, mapping, thumbnail, fulltext, orientation, err
 }
