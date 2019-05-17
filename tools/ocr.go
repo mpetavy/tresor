@@ -3,6 +3,7 @@ package tools
 import (
 	"bufio"
 	"flag"
+	"fmt"
 	"github.com/mpetavy/common"
 	"github.com/mpetavy/tresor/utils/errors"
 	"io"
@@ -29,13 +30,13 @@ func init() {
 	tesseractLanguage = flag.String("tesseract.language", "", "Tesseract language")
 }
 
-func processText(wg *sync.WaitGroup, path string, language string, imageFile string, txt *string, err error) {
+func processText(wg *sync.WaitGroup, path string, language string, imageFile string, txt *string, err *error) {
 	defer wg.Done()
 
 	var outputFile *os.File
 
-	outputFile, err = common.CreateTempFile()
-	if err != nil {
+	outputFile, *err = common.CreateTempFile()
+	if *err != nil {
 		return
 	}
 	defer common.FileDelete(outputFile.Name())
@@ -45,43 +46,45 @@ func processText(wg *sync.WaitGroup, path string, language string, imageFile str
 		cmd.Stderr = os.Stderr
 	}
 
-	err = cmd.Run()
-	if err != nil {
+	*err = cmd.Run()
+	if *err != nil {
+		fmt.Println(imageFile)
+		common.Error(*err)
 		return
 	}
 
 	var b bool
 
-	b, err = common.FileExists(outputFile.Name() + ".txt")
-	if err != nil {
+	b, *err = common.FileExists(outputFile.Name() + ".txt")
+	if *err != nil {
 		return
 	}
 	if !b {
-		err = &common.ErrFileNotFound{outputFile.Name() + ".txt"}
+		*err = &common.ErrFileNotFound{outputFile.Name() + ".txt"}
 	}
 
 	if cmd.ProcessState.ExitCode() != 0 {
-		err = &errors.ErrProcessState{cmd.ProcessState.ExitCode()}
+		*err = &errors.ErrProcessState{cmd.ProcessState.ExitCode()}
 		return
 	}
 
 	var buf []byte
 
-	buf, err = ioutil.ReadFile(outputFile.Name() + ".txt")
-	if err != nil {
+	buf, *err = ioutil.ReadFile(outputFile.Name() + ".txt")
+	if *err != nil {
 		return
 	}
 
 	*txt = string(buf)
 }
 
-func processOrientation(wg *sync.WaitGroup, path string, language string, imageFile string, orientation *int, err error) {
+func processOrientation(wg *sync.WaitGroup, path string, language string, imageFile string, orientation *int, err *error) {
 	defer wg.Done()
 
 	var outputFile *os.File
 
-	outputFile, err = common.CreateTempFile()
-	if err != nil {
+	outputFile, *err = common.CreateTempFile()
+	if *err != nil {
 		return
 	}
 	defer common.FileDelete(outputFile.Name())
@@ -91,38 +94,42 @@ func processOrientation(wg *sync.WaitGroup, path string, language string, imageF
 		cmd.Stderr = os.Stderr
 	}
 
-	err = cmd.Run()
-	if err != nil {
+	*err = cmd.Run()
+	if *err != nil {
+		fmt.Println(imageFile)
+		common.Error(*err)
 		return
 	}
 
 	if cmd.ProcessState.ExitCode() != 0 {
-		err = &errors.ErrProcessState{cmd.ProcessState.ExitCode()}
+		*err = &errors.ErrProcessState{cmd.ProcessState.ExitCode()}
 		return
 	}
 
 	var b bool
 
-	b, err = common.FileExists(outputFile.Name() + ".osd")
-	if err != nil {
+	b, *err = common.FileExists(outputFile.Name() + ".osd")
+	if *err != nil {
 		return
 	}
 	if !b {
-		err = &common.ErrFileNotFound{outputFile.Name() + ".osd"}
+		*err = &common.ErrFileNotFound{outputFile.Name() + ".osd"}
 		return
 	}
 
 	var buf []byte
 
-	buf, err = ioutil.ReadFile(outputFile.Name() + ".osd")
-	if err != nil {
+	buf, *err = ioutil.ReadFile(outputFile.Name() + ".osd")
+	if *err != nil {
 		return
 	}
 
+	var line string
+
 	r := bufio.NewReader(strings.NewReader(string(buf)))
 	for {
-		line, err := r.ReadString('\n')
-		if err == io.EOF {
+		line, *err = r.ReadString('\n')
+		if *err == io.EOF {
 			break
 		}
 
@@ -130,7 +137,7 @@ func processOrientation(wg *sync.WaitGroup, path string, language string, imageF
 		if p != -1 {
 			line = strings.TrimSpace(line[p+len(orientation_in_degrees):])
 
-			*orientation, err = strconv.Atoi(line)
+			*orientation, *err = strconv.Atoi(line)
 			break
 		}
 	}
@@ -146,10 +153,10 @@ func Ocr(imageFile string) (string, int, error) {
 	var orientation int
 
 	wg.Add(1)
-	processText(&wg, *tesseractPath, *tesseractLanguage, imageFile, &txt, txtErr)
+	go processText(&wg, *tesseractPath, *tesseractLanguage, imageFile, &txt, &txtErr)
 
 	wg.Add(1)
-	processOrientation(&wg, *tesseractPath, *tesseractLanguage, imageFile, &orientation, orientationErr)
+	go processOrientation(&wg, *tesseractPath, *tesseractLanguage, imageFile, &orientation, &orientationErr)
 
 	wg.Wait()
 
