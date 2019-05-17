@@ -537,10 +537,10 @@ func (sha *Sha) Store(suid string, source io.Reader, options *Options) (string, 
 	return uid.String(), &digest, nil
 }
 
-func (sha *Sha) Load(suid string, dest io.Writer, options *Options) (string,*[]byte, int64, error) {
+func (sha *Sha) Load(suid string, dest io.Writer, options *Options) (string, *[]byte, int64, error) {
 	uid, err := ParseShaUID(suid)
 	if err != nil {
-		return "",nil, -1, err
+		return "", nil, -1, err
 	}
 
 	cluster.Lock(cluster.STORAGE_UID(sha.name, strconv.Itoa(uid.Id)))
@@ -548,28 +548,28 @@ func (sha *Sha) Load(suid string, dest io.Writer, options *Options) (string,*[]b
 
 	_, path, err := sha.find(uid, options)
 	if err != nil {
-		return "",nil, -1, err
+		return "", nil, -1, err
 	}
 
 	source, err := os.Open(path)
 	if err != nil {
-		return "",nil, -1, err
+		return "", nil, -1, err
 	}
 	defer source.Close()
 
 	h, err := hash.New(hash.MD5)
 	if err != nil {
-		return "",nil, -1, err
+		return "", nil, -1, err
 	}
 
 	n, err := io.Copy(io.MultiWriter(dest, h), source)
 	if err != nil {
-		return "",nil, -1, err
+		return "", nil, -1, err
 	}
 
 	digest := h.Sum(nil)
 
-	return path,&digest, n, nil
+	return path, &digest, n, nil
 }
 
 func (sha *Sha) Delete(suid string, options *Options) error {
@@ -631,16 +631,27 @@ func (sha *Sha) Delete(suid string, options *Options) error {
 	return nil
 }
 
+type indexResult struct {
+	mimeType  string
+	mapping   *index.Mapping
+	thumbnail *[]byte
+}
+
 func (sha *Sha) rebuildBucket(wg *sync.WaitGroup, uid *ShaUID, version int) {
 	defer wg.Done()
 
 	bucket := models.NewBucket()
 	bucket.Uid = uid.String()
 
-	for page := 1; ; page++ {
+	wgIndex := sync.WaitGroup{}
+	mapIndex := make(map[int]indexResult)
+
+	page := 1
+
+	for ; ; page++ {
 		uid.Object = PAGE + "." + strconv.Itoa(page)
 
-		path,h, n, err := sha.Load(uid.String(), ioutil.Discard, nil)
+		path, h, n, err := sha.Load(uid.String(), ioutil.Discard, nil)
 		if err != nil {
 			if page == 1 {
 				common.Error(err)
@@ -651,24 +662,35 @@ func (sha *Sha) rebuildBucket(wg *sync.WaitGroup, uid *ShaUID, version int) {
 		bucket.FileName = append(bucket.FileName, uid.Object)
 		bucket.FileHash = append(bucket.FileHash, hex.EncodeToString(*h))
 
-		var mimeType string
-		var mapping *index.Mapping
-		var thumbnail *[]byte
+		wgIndex.Add(1)
+		go func(page int, path string) {
+			ir := indexResult{}
 
-		err = index.Exec("index", func(index *index.Index) error {
-			mimeType,mapping,thumbnail,err = (*index).Index(path,nil)
+			err = index.Exec("index", func(index *index.Index) error {
+				ir.mimeType, ir.mapping, ir.thumbnail, err = (*index).Index(path, nil)
 
-			return err
-		})
-		if err != nil {
-			common.Error(err)
-			return
-		}
+				return err
+			})
+			if err != nil {
+				common.Error(err)
+				return
+			}
 
-		bucket.FileType = append(bucket.FileType, mimeType)
+			mapIndex[page] = ir
+
+			wgIndex.Done()
+		}(page, path)
+
 		bucket.FileLen = append(bucket.FileLen, n)
 
 		common.Debug("%s: %s", (*uid).String(), hex.EncodeToString(*h))
+	}
+
+	wgIndex.Wait()
+
+	for i := 1; i < page; i++ {
+		ir := mapIndex[i]
+		bucket.FileType = append(bucket.FileType, ir.mimeType)
 	}
 
 	err := database.Exec("db", func(db *database.Database) error {

@@ -20,27 +20,27 @@ const (
 )
 
 var (
-	tesseractPath *string
+	tesseractPath     *string
 	tesseractLanguage *string
 )
 
 func init() {
-	tesseractPath = flag.String("tesseract_path","c:\\Tesseract-OCR","Tesseract path")
-	tesseractLanguage = flag.String("tesseract_language","deu","Tesseract language")
+	tesseractPath = flag.String("tesseract.path", "", "Tesseract path")
+	tesseractLanguage = flag.String("tesseract.language", "", "Tesseract language")
 }
 
-func processText(wg *sync.WaitGroup,path string,language string,imageFile string,txt *string,err error) {
+func processText(wg *sync.WaitGroup, path string, language string, imageFile string, txt *string, err error) {
 	defer wg.Done()
 
 	var outputFile *os.File
 
-	outputFile,err = common.CreateTempFile()
+	outputFile, err = common.CreateTempFile()
 	if err != nil {
 		return
 	}
 	defer common.FileDelete(outputFile.Name())
 
-	cmd := exec.Command(filepath.Join(path,"tesseract.exe"),"--tessdata-dir",filepath.Join(path,"tessdata"),imageFile,outputFile.Name(),"-l",language)
+	cmd := exec.Command(filepath.Join(path, "tesseract.exe"), "--tessdata-dir", filepath.Join(path, "tessdata"), imageFile, outputFile.Name(), "-l", language)
 	if common.IsDebugMode() {
 		cmd.Stderr = os.Stderr
 	}
@@ -52,7 +52,7 @@ func processText(wg *sync.WaitGroup,path string,language string,imageFile string
 
 	var b bool
 
-	b,err = common.FileExists(outputFile.Name() + ".txt")
+	b, err = common.FileExists(outputFile.Name() + ".txt")
 	if err != nil {
 		return
 	}
@@ -67,7 +67,7 @@ func processText(wg *sync.WaitGroup,path string,language string,imageFile string
 
 	var buf []byte
 
-	buf,err = ioutil.ReadFile(outputFile.Name() + ".txt")
+	buf, err = ioutil.ReadFile(outputFile.Name() + ".txt")
 	if err != nil {
 		return
 	}
@@ -75,18 +75,18 @@ func processText(wg *sync.WaitGroup,path string,language string,imageFile string
 	*txt = string(buf)
 }
 
-func processOrientation(wg *sync.WaitGroup,path string,language string,imageFile string,orientation *int,err error) {
+func processOrientation(wg *sync.WaitGroup, path string, language string, imageFile string, orientation *int, err error) {
 	defer wg.Done()
 
 	var outputFile *os.File
 
-	outputFile,err = common.CreateTempFile()
+	outputFile, err = common.CreateTempFile()
 	if err != nil {
 		return
 	}
 	defer common.FileDelete(outputFile.Name())
 
-	cmd := exec.Command(filepath.Join(path,"tesseract"),"--tessdata-dir",filepath.Join(path,"tessdata"),imageFile,outputFile.Name(),"-l",language,"--psm","0")
+	cmd := exec.Command(filepath.Join(path, "tesseract"), "--tessdata-dir", filepath.Join(path, "tessdata"), imageFile, outputFile.Name(), "-l", language, "--psm", "0")
 	if common.IsDebugMode() {
 		cmd.Stderr = os.Stderr
 	}
@@ -103,7 +103,7 @@ func processOrientation(wg *sync.WaitGroup,path string,language string,imageFile
 
 	var b bool
 
-	b,err = common.FileExists(outputFile.Name() + ".osd")
+	b, err = common.FileExists(outputFile.Name() + ".osd")
 	if err != nil {
 		return
 	}
@@ -114,7 +114,7 @@ func processOrientation(wg *sync.WaitGroup,path string,language string,imageFile
 
 	var buf []byte
 
-	buf,err = ioutil.ReadFile(outputFile.Name() + ".osd")
+	buf, err = ioutil.ReadFile(outputFile.Name() + ".osd")
 	if err != nil {
 		return
 	}
@@ -126,17 +126,17 @@ func processOrientation(wg *sync.WaitGroup,path string,language string,imageFile
 			break
 		}
 
-		p := strings.Index(line,orientation_in_degrees)
+		p := strings.Index(line, orientation_in_degrees)
 		if p != -1 {
-			line = strings.TrimSpace(line[p + len(orientation_in_degrees):])
+			line = strings.TrimSpace(line[p+len(orientation_in_degrees):])
 
-			*orientation,err = strconv.Atoi(line)
+			*orientation, err = strconv.Atoi(line)
 			break
 		}
 	}
 }
 
-func Ocr(imageFile string) (string,int,error) {
+func Ocr(imageFile string) (string, int, error) {
 	wg := sync.WaitGroup{}
 
 	var txtErr error
@@ -146,20 +146,20 @@ func Ocr(imageFile string) (string,int,error) {
 	var orientation int
 
 	wg.Add(1)
-	processText(&wg,*tesseractPath,*tesseractLanguage,imageFile,&txt,txtErr)
+	processText(&wg, *tesseractPath, *tesseractLanguage, imageFile, &txt, txtErr)
 
 	wg.Add(1)
-	processOrientation(&wg,*tesseractPath,*tesseractLanguage,imageFile,&orientation,orientationErr)
+	processOrientation(&wg, *tesseractPath, *tesseractLanguage, imageFile, &orientation, orientationErr)
 
 	wg.Wait()
 
 	if txtErr != nil {
-		return "",-1, txtErr
+		return "", -1, txtErr
 	}
 
 	if orientationErr != nil {
-		return "",-1,orientationErr
+		return "", -1, orientationErr
 	}
 
-	return txt,orientation,nil
+	return txt, orientation, nil
 }
