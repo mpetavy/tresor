@@ -425,7 +425,7 @@ func (fs *Fs) rebuildBucket(wg *sync.WaitGroup, uid *FsUID) {
 	var mapping *index.Mapping
 	var thumbnail *[]byte
 	var fulltext string
-	var orientation int
+	var orientation common.Orientation
 
 	err = index.Exec("index", func(index *index.Index) error {
 		mimeType, mapping, thumbnail, fulltext, orientation, err = (*index).Index(path, nil)

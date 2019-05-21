@@ -97,14 +97,14 @@ func (defaultIndexer *DefaultIndexer) indexDicom(path string, buffer []byte, opt
 	return &mapping, nil, err
 }
 
-func (defaultIndexer *DefaultIndexer) Index(path string, options *Options) (string, *Mapping, *[]byte, string, int, error) {
+func (defaultIndexer *DefaultIndexer) Index(path string, options *Options) (string, *Mapping, *[]byte, string, common.Orientation, error) {
 	var err error
 	var mimeType string
 	var mapping *Mapping
 	var thumbnail *[]byte
 	var buffer []byte
 	var fulltext string
-	var orientation int
+	var orientation common.Orientation
 
 	s, err := common.FileSize(path)
 	if err != nil {

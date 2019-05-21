@@ -636,7 +636,7 @@ type indexResult struct {
 	mapping     *index.Mapping
 	thumbnail   *[]byte
 	fulltext    string
-	orientation int
+	orientation common.Orientation
 }
 
 func (sha *Sha) rebuildBucket(wg *sync.WaitGroup, uid *ShaUID, version int) {
