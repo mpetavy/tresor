@@ -20,7 +20,7 @@ type Index interface {
 	Init(*common.Jason) error
 	Start() error
 	Stop() error
-	Index(file string, options *Options) (string, *Mapping, *[]byte, string, int, error)
+	Index(path string, options *Options) (string, *Mapping, *[]byte, string, common.Orientation, error)
 }
 
 type instance struct {

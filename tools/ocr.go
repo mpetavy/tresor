@@ -2,22 +2,15 @@ package tools
 
 import (
 	"bufio"
+	"bytes"
 	"flag"
-	"fmt"
 	"github.com/mpetavy/common"
-	"github.com/mpetavy/tresor/utils/errors"
 	"io"
-	"io/ioutil"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
-)
-
-const (
-	orientation_in_degrees = "Orientation in degrees:"
 )
 
 var (
@@ -26,146 +19,138 @@ var (
 )
 
 func init() {
-	tesseractPath = flag.String("tesseract.path", "", "Tesseract path")
-	tesseractLanguage = flag.String("tesseract.language", "", "Tesseract language")
+	tesseractPath = flag.String("tesseract.path", "c:\\Tesseract-OCR", "Tesseract path")
+	tesseractLanguage = flag.String("tesseract.language", "deu", "Tesseract language")
 }
 
 func processText(wg *sync.WaitGroup, path string, language string, imageFile string, txt *string, err *error) {
 	defer wg.Done()
 
-	var outputFile *os.File
+	cmd := exec.Command(filepath.Join(path, "tesseract.exe"), imageFile, "stdout", "-l", language)
 
-	outputFile, *err = common.CreateTempFile()
-	if *err != nil {
-		return
-	}
-	defer common.FileDelete(outputFile.Name())
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
 
-	cmd := exec.Command(filepath.Join(path, "tesseract.exe"), "--tessdata-dir", filepath.Join(path, "tessdata"), imageFile, outputFile.Name(), "-l", language)
-	if common.IsDebugMode() {
-		cmd.Stderr = os.Stderr
-	}
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
 
 	*err = cmd.Run()
 	if *err != nil {
-		fmt.Println(imageFile)
-		common.Error(*err)
 		return
 	}
 
-	var b bool
-
-	b, *err = common.FileExists(outputFile.Name() + ".txt")
-	if *err != nil {
-		return
-	}
-	if !b {
-		*err = &common.ErrFileNotFound{outputFile.Name() + ".txt"}
-	}
-
-	if cmd.ProcessState.ExitCode() != 0 {
-		*err = &errors.ErrProcessState{cmd.ProcessState.ExitCode()}
-		return
-	}
-
-	var buf []byte
-
-	buf, *err = ioutil.ReadFile(outputFile.Name() + ".txt")
-	if *err != nil {
-		return
-	}
-
-	*txt = string(buf)
+	*txt = string(stdout.Bytes())
 }
 
-func processOrientation(wg *sync.WaitGroup, path string, language string, imageFile string, orientation *int, err *error) {
+func processOrientation(wg *sync.WaitGroup, path string, language string, imageFile string, orientation *common.Orientation, err *error) {
 	defer wg.Done()
 
-	var outputFile *os.File
+	cmd := exec.Command(filepath.Join(path, "tesseract"), imageFile, "stdout", "--psm", "0")
 
-	outputFile, *err = common.CreateTempFile()
-	if *err != nil {
-		return
-	}
-	defer common.FileDelete(outputFile.Name())
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
 
-	cmd := exec.Command(filepath.Join(path, "tesseract"), "--tessdata-dir", filepath.Join(path, "tessdata"), imageFile, outputFile.Name(), "-l", language, "--psm", "0")
-	if common.IsDebugMode() {
-		cmd.Stderr = os.Stderr
-	}
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
 
 	*err = cmd.Run()
 	if *err != nil {
-		fmt.Println(imageFile)
-		common.Error(*err)
 		return
 	}
 
-	if cmd.ProcessState.ExitCode() != 0 {
-		*err = &errors.ErrProcessState{cmd.ProcessState.ExitCode()}
-		return
-	}
-
-	var b bool
-
-	b, *err = common.FileExists(outputFile.Name() + ".osd")
-	if *err != nil {
-		return
-	}
-	if !b {
-		*err = &common.ErrFileNotFound{outputFile.Name() + ".osd"}
-		return
-	}
-
-	var buf []byte
-
-	buf, *err = ioutil.ReadFile(outputFile.Name() + ".osd")
-	if *err != nil {
-		return
+	tags := []string{"Orientation in degrees:", "Orientation:"}
+	s := string(stdout.Bytes())
+	if s == "" {
+		s = string(stderr.Bytes())
 	}
 
 	var line string
+	var o int
 
-	r := bufio.NewReader(strings.NewReader(string(buf)))
+	r := bufio.NewReader(strings.NewReader(s))
 	for {
 		line, *err = r.ReadString('\n')
 		if *err == io.EOF {
 			break
 		}
 
-		p := strings.Index(line, orientation_in_degrees)
-		if p != -1 {
-			line = strings.TrimSpace(line[p+len(orientation_in_degrees):])
+		for _, tag := range tags {
+			p := strings.Index(line, tag)
+			if p != -1 {
+				line = strings.TrimSpace(line[p+len(tag):])
 
-			*orientation, *err = strconv.Atoi(line)
-			break
+				o, *err = strconv.Atoi(line)
+				if *err != nil {
+					return
+				}
+
+				switch o {
+				case 0:
+					*orientation = common.ORIENTATION_0
+				case 90:
+					*orientation = common.ORIENTATION_270
+				case 180:
+					*orientation = common.ORIENTATION_180
+				case 270:
+					*orientation = common.ORIENTATION_90
+				}
+				return
+			}
 		}
 	}
 }
 
-func Ocr(imageFile string) (string, int, error) {
+func Ocr(imageFile string) (string, common.Orientation, error) {
 	wg := sync.WaitGroup{}
 
 	var txtErr error
 	var txt string
 
 	var orientationErr error
-	var orientation int
+	var orientation common.Orientation
 
 	wg.Add(1)
-	go processText(&wg, *tesseractPath, *tesseractLanguage, imageFile, &txt, &txtErr)
+	processOrientation(&wg, *tesseractPath, *tesseractLanguage, imageFile, &orientation, &orientationErr)
+
+	if orientationErr != nil {
+		common.WarnError(orientationErr)
+	}
+
+	if orientation != 0 {
+		tmpImage, err := common.LoadImage(imageFile)
+		if err != nil {
+			return "", -1, err
+		}
+
+		switch orientation {
+		case common.ORIENTATION_90:
+			tmpImage = common.Rotate(tmpImage, common.ROTATE_270)
+		case common.ORIENTATION_180:
+			tmpImage = common.Rotate(tmpImage, common.ROTATE_180)
+		case common.ORIENTATION_270:
+			tmpImage = common.Rotate(tmpImage, common.ROTATE_90)
+		}
+
+		tmpFile, err := common.CreateTempFile()
+		if err != nil {
+			return "", -1, err
+		}
+
+		err = common.SaveJpeg(tmpImage, tmpFile.Name())
+		if err != nil {
+			return "", -1, err
+		}
+
+		imageFile = tmpFile.Name()
+	}
 
 	wg.Add(1)
-	go processOrientation(&wg, *tesseractPath, *tesseractLanguage, imageFile, &orientation, &orientationErr)
+	processText(&wg, *tesseractPath, *tesseractLanguage, imageFile, &txt, &txtErr)
 
 	wg.Wait()
 
 	if txtErr != nil {
 		return "", -1, txtErr
-	}
-
-	if orientationErr != nil {
-		return "", -1, orientationErr
 	}
 
 	return txt, orientation, nil
