@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	hello_world = "Hello, this is OCR"
+	msg = "Hello, this is OCR"
 )
 
 func TestMain(m *testing.M) {
@@ -32,9 +32,9 @@ func TestOcr(t *testing.T) {
 	if err := dc.LoadFontFace("c:/windows/fonts/Arial.ttf", 96); err != nil {
 		panic(err)
 	}
-	dc.DrawStringAnchored(hello_world, 1648/2, 200, 0.5, 0.5)
-	dc.DrawStringAnchored(hello_world, 1648/2, 400, 0.5, 0.5)
-	dc.DrawStringAnchored(hello_world, 1648/2, 600, 0.5, 0.5)
+	dc.DrawStringAnchored(msg, 1648/2, 200, 0.5, 0.5)
+	dc.DrawStringAnchored(msg, 1648/2, 400, 0.5, 0.5)
+	dc.DrawStringAnchored(msg, 1648/2, 600, 0.5, 0.5)
 
 	f, err := ioutil.TempFile("", "")
 	if err != nil {
@@ -64,7 +64,7 @@ func TestOcr(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		assert.True(t, strings.Index(txt, hello_world) != -1, "Must have recognized text "+hello_world)
+		assert.True(t, strings.Index(txt, msg) != -1, "Must have recognized text "+msg)
 		assert.True(t, i == int(orientation), "Must have recognized orientation")
 
 		fmt.Println(txt)
