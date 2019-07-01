@@ -49,6 +49,8 @@ github.com/kardianos/service v1.0.0 h1:HgQS3mFfOlyntWX8Oke98JcJLqt1DBcHR4kxShpYe
 github.com/kardianos/service v1.0.0/go.mod h1:8CzDhVuCuugtsHyZoTvsOBuvonN/UDBvl0kH+BUxvbo=
 github.com/mpetavy/common v1.0.0 h1:AyQ0+bJvOayWakJaFta3OpYZ3YWk56ayriUaB1xapE8=
 github.com/mpetavy/common v1.0.0/go.mod h1:SlSzGLnxqW9DQDDiEI4OU0zZ3XzTODnW/9XDYsWJ7is=
+github.com/mpetavy/common v1.1.2 h1:WYN8dvRKFE8cjqjeG373ronH0KEr0sfOg18RK6F3y9M=
+github.com/mpetavy/common v1.1.2/go.mod h1:Pr2ftCuF+ygR7/L3/tdVh+s++xYBCpr6sBBbe2YOIqo=
 github.com/mpetavy/go-dicom v0.0.0-20190425222315-e8a3a6a3f629 h1:f+XT4eQvD5Dxu37QZk856ybCx5jMPjr82FQ8mzNlz5M=
 github.com/mpetavy/go-dicom v0.0.0-20190425222315-e8a3a6a3f629/go.mod h1:mpzhIxvj2B55nj9QaFE+s8/CWURufxbcXWQISQIk6Ew=
 github.com/patrickmn/go-cache v2.1.0+incompatible h1:HRMgzkcYKYpi3C8ajMPV8OFXaaRUnok+kx1WdO15EQc=

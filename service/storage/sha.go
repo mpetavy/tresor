@@ -589,7 +589,12 @@ func (sha *Sha) Delete(suid string, options *Options) error {
 		return err
 	}
 
-	if common.IsFile(path) {
+	b,err := common.IsFile(path) 
+	if err != nil {
+		return err
+	}
+	
+	if b {
 		err := os.Remove(path)
 		if err != nil {
 			return err
