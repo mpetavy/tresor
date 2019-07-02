@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
 )
 
 var (
@@ -23,9 +22,7 @@ func init() {
 	tesseractLanguage = flag.String("tesseract.language", "deu", "Tesseract language")
 }
 
-func processText(wg *sync.WaitGroup, path string, language string, imageFile string, txt *string, err *error) {
-	defer wg.Done()
-
+func processText(path string, language string, imageFile string, txt *string, err *error) {
 	cmd := exec.Command(filepath.Join(path, "tesseract.exe"), imageFile, "stdout", "-l", language)
 
 	var stdout bytes.Buffer
@@ -42,9 +39,7 @@ func processText(wg *sync.WaitGroup, path string, language string, imageFile str
 	*txt = string(stdout.Bytes())
 }
 
-func processOrientation(wg *sync.WaitGroup, path string, language string, imageFile string, orientation *common.Orientation, err *error) {
-	defer wg.Done()
-
+func processOrientation(path string, language string, imageFile string, orientation *common.Orientation, err *error) {
 	cmd := exec.Command(filepath.Join(path, "tesseract"), imageFile, "stdout", "--psm", "0")
 
 	var stdout bytes.Buffer
@@ -101,16 +96,13 @@ func processOrientation(wg *sync.WaitGroup, path string, language string, imageF
 }
 
 func Ocr(imageFile string) (string, common.Orientation, error) {
-	wg := sync.WaitGroup{}
-
 	var txtErr error
 	var txt string
 
 	var orientationErr error
 	var orientation common.Orientation
 
-	wg.Add(1)
-	processOrientation(&wg, *tesseractPath, *tesseractLanguage, imageFile, &orientation, &orientationErr)
+	processOrientation(*tesseractPath, *tesseractLanguage, imageFile, &orientation, &orientationErr)
 
 	if orientationErr != nil {
 		common.WarnError(orientationErr)
@@ -144,10 +136,7 @@ func Ocr(imageFile string) (string, common.Orientation, error) {
 		imageFile = tmpFile.Name()
 	}
 
-	wg.Add(1)
-	processText(&wg, *tesseractPath, *tesseractLanguage, imageFile, &txt, &txtErr)
-
-	wg.Wait()
+	processText(*tesseractPath, *tesseractLanguage, imageFile, &txt, &txtErr)
 
 	if txtErr != nil {
 		return "", -1, txtErr

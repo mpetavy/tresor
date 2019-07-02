@@ -31,4 +31,4 @@ require (
 	mellium.im/sasl v0.2.1 // indirect
 )
 
-//replace github.com/mpetavy/common => ../common
+replace github.com/mpetavy/common => ../common
