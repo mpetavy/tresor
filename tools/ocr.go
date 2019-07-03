@@ -10,20 +10,25 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var (
-	tesseractPath     *string
-	tesseractLanguage *string
+	tesseractPath         *string
+	tesseractLanguage     *string
+	ocrOrientationTimeout *int
+	ocrScanTimeout        *int
 )
 
 func init() {
 	tesseractPath = flag.String("tesseract.path", "c:\\Tesseract-OCR", "Tesseract path")
 	tesseractLanguage = flag.String("tesseract.language", "deu", "Tesseract language")
+	ocrOrientationTimeout = flag.Int("ocr.orientation.timeout", 3000, "OCR orientation timeout")
+	ocrScanTimeout = flag.Int("ocr.scan.timeout", 5000, "OCR scan timeout")
 }
 
 func processText(path string, language string, imageFile string, txt *string, err *error) {
-	cmd := exec.Command(filepath.Join(path, "tesseract.exe"), imageFile, "stdout", "-l", language)
+	cmd := exec.Command(filepath.Join(path, "tesseract"), imageFile, "stdout", "-l", language)
 
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
@@ -31,7 +36,7 @@ func processText(path string, language string, imageFile string, txt *string, er
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
-	*err = cmd.Run()
+	*err = common.Watchdog(cmd, time.Millisecond*time.Duration(*ocrScanTimeout))
 	if *err != nil {
 		return
 	}
@@ -48,7 +53,7 @@ func processOrientation(path string, language string, imageFile string, orientat
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
-	*err = cmd.Run()
+	*err = common.Watchdog(cmd, time.Millisecond*time.Duration(*ocrOrientationTimeout))
 	if *err != nil {
 		return
 	}
