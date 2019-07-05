@@ -293,7 +293,7 @@ func TestFilestorage(t *testing.T) {
 		go func(m maker) {
 			defer wg.Done()
 
-			deletedPage := common.Rnd(len(m.hash)) + 1
+			deletedPage := common.Rnd(len(m.hash))
 
 			m.uid.Object = PAGE + "." + strconv.Itoa(deletedPage)
 
