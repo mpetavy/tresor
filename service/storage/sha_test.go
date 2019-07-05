@@ -146,7 +146,7 @@ func TestBasicIO(t *testing.T) {
 
 	var w bytes.Buffer
 
-	hl, _, err := fs.Load(suid, &w, nil)
+	_, hl, _, err := fs.Load(suid, &w, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -309,10 +309,10 @@ func TestFilestorage(t *testing.T) {
 
 				m.uid.Object = PAGE + "." + strconv.Itoa(page)
 
-				hash, _, err := fs.Load(m.uid.String(), ioutil.Discard, nil)
+				_, hash, _, err := fs.Load(m.uid.String(), ioutil.Discard, nil)
 
 				if page == deletedPage {
-					hash, _, err = fs.Load(m.uid.String(), ioutil.Discard, nil)
+					_, hash, _, err = fs.Load(m.uid.String(), ioutil.Discard, nil)
 					_, ok := err.(*ErrObjectNotFound)
 					assert.True(t, ok, "load on deleted page gave no error")
 				} else {
@@ -369,7 +369,7 @@ loop_id:
 			for page := 1; ; page++ {
 				uid.Object = PAGE + "." + strconv.Itoa(page)
 
-				hash, _, err := fs.Load(uid.String(), ioutil.Discard, nil)
+				_, hash, _, err := fs.Load(uid.String(), ioutil.Discard, nil)
 				if err != nil {
 					if page == 1 {
 						break loop_id

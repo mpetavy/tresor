@@ -351,9 +351,6 @@ func (fs *Fs) Delete(suid string, options *Options) error {
 		return err
 	}
 
-	cluster.Lock(cluster.STORAGE_UID(fs.name, uid.Path))
-	defer cluster.Unlock(cluster.STORAGE_UID(fs.name, uid.Path))
-
 	var volume *FsVolume
 	var path string
 
@@ -362,7 +359,10 @@ func (fs *Fs) Delete(suid string, options *Options) error {
 		return err
 	}
 
-	b,err := common.IsFile(path) 
+	cluster.Lock(cluster.STORAGE_UID(fs.name, uid.Path))
+	defer cluster.Unlock(cluster.STORAGE_UID(fs.name, uid.Path))
+
+	b, err := common.IsFile(path)
 	if err != nil {
 		return err
 	}
@@ -428,12 +428,9 @@ func (fs *Fs) rebuildBucket(wg *sync.WaitGroup, uid *FsUID) {
 
 	var mimeType string
 	var mapping *index.Mapping
-	var thumbnail *[]byte
-	var fulltext string
-	var orientation common.Orientation
 
 	err = index.Exec("index", func(index *index.Index) error {
-		mimeType, mapping, thumbnail, fulltext, orientation, err = (*index).Index(path, nil)
+		mimeType, mapping, _, _, _, err = (*index).Index(path, nil)
 
 		return err
 	})

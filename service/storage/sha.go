@@ -226,8 +226,8 @@ func (sha *Sha) RemoveVolume(v *ShaVolume) {
 }
 
 func (sha *Sha) nextUID() int {
-	cluster.Lock(cluster.STORAGE(""))
-	defer cluster.Unlock(cluster.STORAGE(""))
+	cluster.Lock(cluster.STORAGE(sha.name))
+	defer cluster.Unlock(cluster.STORAGE(sha.name))
 
 	sha.uid++
 
@@ -589,11 +589,11 @@ func (sha *Sha) Delete(suid string, options *Options) error {
 		return err
 	}
 
-	b,err := common.IsFile(path) 
+	b, err := common.IsFile(path)
 	if err != nil {
 		return err
 	}
-	
+
 	if b {
 		err := os.Remove(path)
 		if err != nil {
