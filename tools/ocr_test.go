@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	msg = "Hello, this is OCR"
+	msg = "Hello, this is OCR by Tesseract!"
 )
 
 func TestMain(m *testing.M) {
@@ -23,13 +23,16 @@ func TestMain(m *testing.M) {
 }
 
 func TestOcr(t *testing.T) {
+	font := common.Eval(common.IsLinuxOS(), "/usr/share/fonts/TTF/DejaVuSans.ttf", "c:/windows/fonts/Arial.ttf").(string)
+
 	img := image.NewRGBA(image.Rect(0, 0, 1648, 2338))
 
 	dc := gg.NewContextForImage(img)
 	dc.SetRGB(1, 1, 1)
 	dc.Clear()
 	dc.SetRGB(0, 0, 0)
-	if err := dc.LoadFontFace("c:/windows/fonts/Arial.ttf", 96); err != nil {
+
+	if err := dc.LoadFontFace(font, 96); err != nil {
 		panic(err)
 	}
 	dc.DrawStringAnchored(msg, 1648/2, 200, 0.5, 0.5)

@@ -4,10 +4,10 @@ import (
 	"bufio"
 	"bytes"
 	"flag"
+	"fmt"
 	"github.com/mpetavy/common"
 	"io"
 	"os/exec"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -15,20 +15,22 @@ import (
 
 var (
 	tesseractPath         *string
+	tesseractDataPath     *string
 	tesseractLanguage     *string
 	ocrOrientationTimeout *int
 	ocrScanTimeout        *int
 )
 
 func init() {
-	tesseractPath = flag.String("tesseract.path", "c:\\Tesseract-OCR", "Tesseract path")
+	tesseractPath = flag.String("tesseract.path", "/bin/tesseract", "Tesseract path")
+	tesseractDataPath = flag.String("tesseract.data.path", "/usr/share/tessdata", "Tesseract data path")
 	tesseractLanguage = flag.String("tesseract.language", "deu", "Tesseract language")
 	ocrOrientationTimeout = flag.Int("ocr.orientation.timeout", 3000, "OCR orientation timeout")
 	ocrScanTimeout = flag.Int("ocr.scan.timeout", 5000, "OCR scan timeout")
 }
 
-func processText(path string, language string, imageFile string, txt *string, err *error) {
-	cmd := exec.Command(filepath.Join(path, "tesseract"), imageFile, "stdout", "-l", language)
+func processText(imageFile string) (string, error) {
+	cmd := exec.Command(*tesseractPath, imageFile, "stdout", "-l", *tesseractLanguage, "--tessdata-dir", *tesseractDataPath)
 
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
@@ -36,16 +38,16 @@ func processText(path string, language string, imageFile string, txt *string, er
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
-	*err = common.Watchdog(cmd, time.Millisecond*time.Duration(*ocrScanTimeout))
-	if *err != nil {
-		return
+	err := common.Watchdog(cmd, time.Millisecond*time.Duration(*ocrScanTimeout))
+	if err != nil {
+		return "", err
 	}
 
-	*txt = string(stdout.Bytes())
+	return string(stdout.Bytes()), nil
 }
 
-func processOrientation(path string, language string, imageFile string, orientation *common.Orientation, err *error) {
-	cmd := exec.Command(filepath.Join(path, "tesseract"), imageFile, "stdout", "--psm", "0")
+func processOrientation(imageFile string) (common.Orientation, error) {
+	cmd := exec.Command(*tesseractPath, imageFile, "stdout", "--psm", "0")
 
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
@@ -53,9 +55,9 @@ func processOrientation(path string, language string, imageFile string, orientat
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
-	*err = common.Watchdog(cmd, time.Millisecond*time.Duration(*ocrOrientationTimeout))
-	if *err != nil {
-		return
+	err := common.Watchdog(cmd, time.Millisecond*time.Duration(*ocrOrientationTimeout))
+	if err != nil {
+		return common.ORIENTATION_0, err
 	}
 
 	tags := []string{"Orientation in degrees:", "Orientation:"}
@@ -69,8 +71,8 @@ func processOrientation(path string, language string, imageFile string, orientat
 
 	r := bufio.NewReader(strings.NewReader(s))
 	for {
-		line, *err = r.ReadString('\n')
-		if *err == io.EOF {
+		line, err = r.ReadString('\n')
+		if err == io.EOF {
 			break
 		}
 
@@ -79,38 +81,35 @@ func processOrientation(path string, language string, imageFile string, orientat
 			if p != -1 {
 				line = strings.TrimSpace(line[p+len(tag):])
 
-				o, *err = strconv.Atoi(line)
-				if *err != nil {
-					return
+				o, err = strconv.Atoi(line)
+				if err != nil {
+					return common.ORIENTATION_0, err
 				}
 
 				switch o {
 				case 0:
-					*orientation = common.ORIENTATION_0
+					return common.ORIENTATION_0, nil
 				case 90:
-					*orientation = common.ORIENTATION_270
+					return common.ORIENTATION_270, nil
 				case 180:
-					*orientation = common.ORIENTATION_180
+					return common.ORIENTATION_180, nil
 				case 270:
-					*orientation = common.ORIENTATION_90
+					return common.ORIENTATION_90, nil
 				}
-				return
+
+				return common.ORIENTATION_0, fmt.Errorf("unknown orientation")
 			}
 		}
 	}
+
+	return common.ORIENTATION_0, nil
 }
 
 func Ocr(imageFile string) (string, common.Orientation, error) {
-	var txtErr error
-	var txt string
+	orientation, err := processOrientation(imageFile)
 
-	var orientationErr error
-	var orientation common.Orientation
-
-	processOrientation(*tesseractPath, *tesseractLanguage, imageFile, &orientation, &orientationErr)
-
-	if orientationErr != nil {
-		common.WarnError(orientationErr)
+	if err != nil {
+		common.WarnError(err)
 	}
 
 	if orientation != 0 {
@@ -141,10 +140,10 @@ func Ocr(imageFile string) (string, common.Orientation, error) {
 		imageFile = tmpFile.Name()
 	}
 
-	processText(*tesseractPath, *tesseractLanguage, imageFile, &txt, &txtErr)
+	txt, err := processText(imageFile)
 
-	if txtErr != nil {
-		return "", -1, txtErr
+	if err != nil {
+		return "", -1, err
 	}
 
 	return txt, orientation, nil
