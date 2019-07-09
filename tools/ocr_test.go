@@ -18,7 +18,7 @@ const (
 
 func TestMain(m *testing.M) {
 	defer common.Cleanup()
-	common.Test(m)
+	common.Test()
 	common.Exit(m.Run())
 }
 
