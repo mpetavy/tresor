@@ -19,12 +19,11 @@ require (
 	github.com/gorilla/mux v1.7.2
 	github.com/jinzhu/inflection v0.0.0-20180308033659-04140366298a // indirect
 	github.com/kr/pretty v0.1.0 // indirect
-	github.com/mpetavy/common v1.1.2
+	github.com/mpetavy/common v1.1.11
 	github.com/mpetavy/go-dicom v0.0.0-20190425222315-e8a3a6a3f629
 	github.com/onsi/ginkgo v1.8.0 // indirect
 	github.com/onsi/gomega v1.5.0 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	github.com/smartystreets/goconvey v0.0.0-20190330032615-68dc04aab96a // indirect
 	github.com/stretchr/testify v1.3.0
 	github.com/tidwall/pretty v1.0.0 // indirect
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
@@ -35,8 +34,7 @@ require (
 	golang.org/x/image v0.0.0-20190516052701-61b8692d9a5c // indirect
 	google.golang.org/appengine v1.6.1 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
-	gopkg.in/ini.v1 v1.42.0 // indirect
 	mellium.im/sasl v0.2.1 // indirect
 )
 
-replace github.com/mpetavy/common => ../common
+// replace github.com/mpetavy/common => ../common
