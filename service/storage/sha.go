@@ -12,7 +12,6 @@ import (
 	"github.com/mpetavy/tresor/models"
 	"github.com/mpetavy/tresor/service/database"
 
-	"github.com/mpetavy/common/generics"
 	"github.com/mpetavy/tresor/service/cluster"
 
 	"fmt"
@@ -371,7 +370,7 @@ func (sha *Sha) find(uid *ShaUID, options *Options) (*ShaVolume, string, error) 
 	listVolumes.PushBack(UNZIP)
 
 	for i := 0; i < listVolumes.Len(); i++ {
-		vn := generics.GetFromList(listVolumes, i).(string)
+		vn := getFromList(listVolumes, i).(string)
 		volume := sha.volumes[vn]
 
 		path, err := createShaPath(volume.Path, uid, volume.Flat, false)

@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"container/list"
 	"io"
 	"net/http"
 	"time"
@@ -60,7 +61,7 @@ func Init(name string, cfg *common.Jason, router *mux.Router) error {
 		storage := Get(name)
 		defer Put(name, storage)
 
-		_,_, _, err := (*storage).Load(v["uid"], rw, nil)
+		_, _, _, err := (*storage).Load(v["uid"], rw, nil)
 		if err != nil {
 			common.Error(err)
 
@@ -125,6 +126,16 @@ func Exec(name string, fn func(storage *Storage) error) error {
 	defer Put(name, storage)
 
 	return fn(storage)
+}
+
+func getFromList(l list.List, index int) interface{} {
+	e := l.Front()
+
+	for i := 0; i < index; i++ {
+		e = e.Next()
+	}
+
+	return e.Value
 }
 
 func create(cfg *common.Jason) (*Storage, error) {
