@@ -13,7 +13,6 @@ import (
 	"github.com/mpetavy/tresor/models"
 	"github.com/mpetavy/tresor/service/database"
 
-	"github.com/mpetavy/common/generics"
 	"github.com/mpetavy/tresor/service/cluster"
 
 	"path/filepath"
@@ -207,7 +206,7 @@ func (fs *Fs) find(uid *FsUID, options *Options) (*FsVolume, string, error) {
 	listVolumes.PushBack(UNZIP)
 
 	for i := 0; i < listVolumes.Len(); i++ {
-		vn := generics.GetFromList(listVolumes, i).(string)
+		vn := getFromList(listVolumes, i).(string)
 		volume := fs.volumes[vn]
 
 		path, err := createFsPath(volume.Path, uid)
