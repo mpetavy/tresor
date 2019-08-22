@@ -79,6 +79,6 @@ func stop() error {
 func main() {
 	defer common.Cleanup()
 
-	common.New(&common.App{"tresor", "0.0.1", "2018", "archive solution", "mpetavy", common.APACHE, "https://github.com/golang/mpetavy/golang/tresor", true, nil, start, stop, nil, time.Duration(0)}, nil)
+	common.New(&common.App{"tresor", "0.0.1", "2018", "archive solution", "mpetavy", common.APACHE, "https://github.com/golang/mpetavy/golang/tresor", true, start, stop, nil, time.Duration(0)}, nil)
 	common.Run()
 }
