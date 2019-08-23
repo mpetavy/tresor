@@ -24,6 +24,8 @@ var (
 )
 
 func init() {
+	common.Init("tresor", "0.0.1", "2018", "archive solution", "mpetavy", common.APACHE, "https://github.com/golang/mpetavy/golang/tresor", true, start, stop, nil, 0)
+
 	serverAddress = flag.String("serverport", ":8100", "Server address:port")
 	serverReadTimeout = flag.Int("serverreadtimeout", 5000, "Server READ timeout")
 	serverWriteTimeout = flag.Int("serverwritetimeout", 5000, "Server READ timeout")
@@ -79,6 +81,5 @@ func stop() error {
 func main() {
 	defer common.Cleanup()
 
-	common.New(&common.App{"tresor", "0.0.1", "2018", "archive solution", "mpetavy", common.APACHE, "https://github.com/golang/mpetavy/golang/tresor", true, start, stop, nil, time.Duration(0)}, nil)
-	common.Run()
+	common.Run(nil)
 }
