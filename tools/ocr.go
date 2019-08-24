@@ -64,7 +64,7 @@ func processText(imageFile string) (string, error) {
 	return string(stdout.Bytes()), nil
 }
 
-func processOrientation(imageFile string) (common.Orientation, error) {
+func processOrientation(imageFile string) (Orientation, error) {
 	cmd := exec.Command(*tesseractPath, imageFile, "stdout", "--psm", "0")
 
 	var stdout bytes.Buffer
@@ -75,7 +75,7 @@ func processOrientation(imageFile string) (common.Orientation, error) {
 
 	err := common.Watchdog(cmd, time.Millisecond*time.Duration(*ocrOrientationTimeout))
 	if err != nil {
-		return common.ORIENTATION_0, err
+		return ORIENTATION_0, err
 	}
 
 	tags := []string{"Orientation in degrees:", "Orientation:"}
@@ -101,29 +101,29 @@ func processOrientation(imageFile string) (common.Orientation, error) {
 
 				o, err = strconv.Atoi(line)
 				if err != nil {
-					return common.ORIENTATION_0, err
+					return ORIENTATION_0, err
 				}
 
 				switch o {
 				case 0:
-					return common.ORIENTATION_0, nil
+					return ORIENTATION_0, nil
 				case 90:
-					return common.ORIENTATION_270, nil
+					return ORIENTATION_270, nil
 				case 180:
-					return common.ORIENTATION_180, nil
+					return ORIENTATION_180, nil
 				case 270:
-					return common.ORIENTATION_90, nil
+					return ORIENTATION_90, nil
 				}
 
-				return common.ORIENTATION_0, fmt.Errorf("unknown orientation")
+				return ORIENTATION_0, fmt.Errorf("unknown orientation")
 			}
 		}
 	}
 
-	return common.ORIENTATION_0, nil
+	return ORIENTATION_0, nil
 }
 
-func Ocr(imageFile string) (string, common.Orientation, error) {
+func Ocr(imageFile string) (string, Orientation, error) {
 	orientation, err := processOrientation(imageFile)
 
 	if err != nil {
@@ -131,18 +131,18 @@ func Ocr(imageFile string) (string, common.Orientation, error) {
 	}
 
 	if orientation != 0 {
-		tmpImage, err := common.LoadImage(imageFile)
+		tmpImage, err := LoadImage(imageFile)
 		if err != nil {
 			return "", -1, err
 		}
 
 		switch orientation {
-		case common.ORIENTATION_90:
-			tmpImage = common.Rotate(tmpImage, common.ROTATE_270)
-		case common.ORIENTATION_180:
-			tmpImage = common.Rotate(tmpImage, common.ROTATE_180)
-		case common.ORIENTATION_270:
-			tmpImage = common.Rotate(tmpImage, common.ROTATE_90)
+		case ORIENTATION_90:
+			tmpImage = Rotate(tmpImage, ROTATE_270)
+		case ORIENTATION_180:
+			tmpImage = Rotate(tmpImage, ROTATE_180)
+		case ORIENTATION_270:
+			tmpImage = Rotate(tmpImage, ROTATE_90)
 		}
 
 		tmpFile, err := common.CreateTempFile()
@@ -150,7 +150,7 @@ func Ocr(imageFile string) (string, common.Orientation, error) {
 			return "", -1, err
 		}
 
-		err = common.SaveJpeg(tmpImage, tmpFile.Name())
+		err = SaveJpeg(tmpImage, tmpFile.Name())
 		if err != nil {
 			return "", -1, err
 		}

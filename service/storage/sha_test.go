@@ -21,7 +21,7 @@ import (
 var count = flag.Int("count", 100, "amount of documents to test with")
 
 func TestMain(m *testing.M) {
-	defer common.Cleanup()
+	defer common.Done()
 	flag.Parse()
 	common.Exit(m.Run())
 }

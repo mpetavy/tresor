@@ -17,7 +17,7 @@ const (
 )
 
 func TestMain(m *testing.M) {
-	defer common.Cleanup()
+	defer common.Done()
 	common.Exit(m.Run())
 }
 
@@ -53,10 +53,10 @@ func TestOcr(t *testing.T) {
 
 	for i := 0; i < 4; i++ {
 		if i > 0 {
-			img1 = common.Rotate(img1, common.ROTATE_90)
+			img1 = Rotate(img1, ROTATE_90)
 		}
 
-		err := common.SaveJpeg(img1, f.Name())
+		err := SaveJpeg(img1, f.Name())
 		if err != nil {
 			t.Fatal(err)
 		}

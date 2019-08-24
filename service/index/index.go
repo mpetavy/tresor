@@ -4,6 +4,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/mpetavy/common"
 	"github.com/mpetavy/tresor/service/errors"
+	"github.com/mpetavy/tresor/tools"
 	"net/http"
 )
 
@@ -20,7 +21,7 @@ type Index interface {
 	Init(*common.Jason) error
 	Start() error
 	Stop() error
-	Index(path string, options *Options) (string, *Mapping, *[]byte, string, common.Orientation, error)
+	Index(path string, options *Options) (string, *Mapping, *[]byte, string, tools.Orientation, error)
 }
 
 type instance struct {
