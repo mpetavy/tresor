@@ -23,8 +23,21 @@ var (
 )
 
 func init() {
-	tesseractPath = flag.String("tesseract.path", "/bin/tesseract", "Tesseract path")
-	tesseractDataPath = flag.String("tesseract.data.path", "", "Tesseract data path")
+	tpath, err := exec.LookPath("tesseract")
+
+	tdatapath := ""
+
+	if err == nil {
+		tdatapath = filepath.Join(filepath.Dir(tpath), "tessdata")
+
+		b, _ := common.FileExists(tdatapath)
+		if !b {
+			tdatapath = ""
+		}
+	}
+
+	tesseractPath = flag.String("tesseract.path", tpath, "Tesseract path")
+	tesseractDataPath = flag.String("tesseract.data.path", tdatapath, "Tesseract data path")
 	tesseractLanguage = flag.String("tesseract.language", "deu", "Tesseract language")
 	ocrOrientationTimeout = flag.Int("ocr.orientation.timeout", 3000, "OCR orientation timeout")
 	ocrScanTimeout = flag.Int("ocr.scan.timeout", 5000, "OCR scan timeout")
@@ -32,14 +45,7 @@ func init() {
 
 func processText(imageFile string) (string, error) {
 	if *tesseractDataPath == "" {
-		f := filepath.Join(filepath.Dir(*tesseractPath), "tessdata")
-
-		b, _ := common.FileExists(f)
-		if b {
-			*tesseractDataPath = f
-		} else {
-			return "", fmt.Errorf("tessetact data path not set")
-		}
+		return "", fmt.Errorf("tessetact data path not set")
 	}
 
 	cmd := exec.Command(*tesseractPath, imageFile, "stdout", "-l", *tesseractLanguage, "--tessdata-dir", *tesseractDataPath)
