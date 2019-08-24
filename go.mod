@@ -9,6 +9,7 @@ require (
 	github.com/asdine/storm v2.1.2+incompatible
 	github.com/dgraph-io/badger v1.5.4
 	github.com/dgryski/go-farm v0.0.0-20190423205320-6a90982ecee2 // indirect
+	github.com/disintegration/imaging v1.6.1
 	github.com/fatih/structs v1.1.0
 	github.com/fogleman/gg v1.3.0
 	github.com/go-pg/pg v8.0.4+incompatible
@@ -24,6 +25,7 @@ require (
 	github.com/onsi/ginkgo v1.8.0 // indirect
 	github.com/onsi/gomega v1.5.0 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible
+	github.com/pdfcpu/pdfcpu v0.2.3
 	github.com/stretchr/testify v1.3.0
 	github.com/tidwall/pretty v1.0.0 // indirect
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect

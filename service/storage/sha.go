@@ -4,6 +4,7 @@ import (
 	"container/list"
 	"encoding/hex"
 	"github.com/mpetavy/tresor/service/index"
+	"github.com/mpetavy/tresor/tools"
 	"io"
 	"io/ioutil"
 	"reflect"
@@ -640,7 +641,7 @@ type indexResult struct {
 	mapping     *index.Mapping
 	thumbnail   *[]byte
 	fulltext    string
-	orientation common.Orientation
+	orientation tools.Orientation
 }
 
 func (sha *Sha) rebuildBucket(wg *sync.WaitGroup, uid *ShaUID, version int) {
