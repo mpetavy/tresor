@@ -15,7 +15,7 @@ import (
 )
 
 func InitServices(router *mux.Router) error {
-	cwd, err := common.CurDir()
+	cwd, err := os.Getwd()
 	if err != nil {
 		return err
 	}
