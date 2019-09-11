@@ -3,15 +3,16 @@ package storage
 import (
 	"container/list"
 	"encoding/hex"
-	"github.com/mpetavy/tresor/service/index"
-	"github.com/mpetavy/tresor/tools"
 	"io"
 	"io/ioutil"
 	"reflect"
 	"strings"
 
+	"github.com/mpetavy/tresor/utils"
+
 	"github.com/mpetavy/tresor/models"
 	"github.com/mpetavy/tresor/service/database"
+	"github.com/mpetavy/tresor/service/index"
 
 	"github.com/mpetavy/tresor/service/cluster"
 
@@ -518,7 +519,9 @@ func (sha *Sha) Store(suid string, source io.Reader, options *Options) (string, 
 	if err != nil {
 		return "", nil, err
 	}
-	defer dest.Close()
+	defer func() {
+		common.IgnoreError(dest.Close())
+	}()
 
 	h, err := hash.New(hash.MD5)
 	if err != nil {
@@ -555,7 +558,9 @@ func (sha *Sha) Load(suid string, dest io.Writer, options *Options) (string, *[]
 	if err != nil {
 		return "", nil, -1, err
 	}
-	defer source.Close()
+	defer func() {
+		common.IgnoreError(source.Close())
+	}()
 
 	h, err := hash.New(hash.MD5)
 	if err != nil {
@@ -641,7 +646,7 @@ type indexResult struct {
 	mapping     *index.Mapping
 	thumbnail   *[]byte
 	fulltext    string
-	orientation tools.Orientation
+	orientation utils.Orientation
 }
 
 func (sha *Sha) rebuildBucket(wg *sync.WaitGroup, uid *ShaUID, version int) {

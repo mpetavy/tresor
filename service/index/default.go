@@ -1,12 +1,14 @@
 package index
 
 import (
+	"io/ioutil"
+	"os"
+
+	"github.com/mpetavy/tresor/utils"
+
 	"github.com/mpetavy/common"
 	"github.com/mpetavy/go-dicom"
 	"github.com/mpetavy/go-dicom/dicomtag"
-	"github.com/mpetavy/tresor/tools"
-	"io/ioutil"
-	"os"
 )
 
 const (
@@ -91,20 +93,22 @@ func (defaultIndexer *DefaultIndexer) indexDicom(path string, buffer []byte, opt
 	}
 
 	if imageFile != nil {
-		defer common.FileDelete(imageFile.Name())
+		defer func() {
+			common.IgnoreError(common.FileDelete(imageFile.Name()))
+		}()
 	}
 
 	return &mapping, nil, err
 }
 
-func (defaultIndexer *DefaultIndexer) Index(path string, options *Options) (string, *Mapping, *[]byte, string, tools.Orientation, error) {
+func (defaultIndexer *DefaultIndexer) Index(path string, options *Options) (string, *Mapping, *[]byte, string, utils.Orientation, error) {
 	var err error
 	var mimeType string
 	var mapping *Mapping
 	var thumbnail *[]byte
 	var buffer []byte
 	var fulltext string
-	var orientation tools.Orientation
+	var orientation utils.Orientation
 
 	s, err := common.FileSize(path)
 	if err != nil {
@@ -129,7 +133,7 @@ func (defaultIndexer *DefaultIndexer) Index(path string, options *Options) (stri
 	}
 
 	if common.IsImageMimeType(mimeType) {
-		fulltext, orientation, err = tools.Ocr(path)
+		fulltext, orientation, err = utils.Ocr(path)
 		if err != nil {
 			return mimeType, mapping, thumbnail, fulltext, orientation, err
 		}

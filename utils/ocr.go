@@ -1,17 +1,18 @@
-package tools
+package utils
 
 import (
 	"bufio"
 	"bytes"
 	"flag"
 	"fmt"
-	"github.com/mpetavy/common"
 	"io"
 	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/mpetavy/common"
 )
 
 var (
@@ -39,8 +40,8 @@ func init() {
 	tesseractPath = flag.String("tesseract.path", tpath, "Tesseract path")
 	tesseractDataPath = flag.String("tesseract.data.path", tdatapath, "Tesseract data path")
 	tesseractLanguage = flag.String("tesseract.language", "deu", "Tesseract language")
-	ocrOrientationTimeout = flag.Int("ocr.orientation.timeout", 3000, "OCR orientation timeout")
-	ocrScanTimeout = flag.Int("ocr.scan.timeout", 5000, "OCR scan timeout")
+	ocrOrientationTimeout = flag.Int("ocr.orientation.timeout", 30000, "OCR orientation timeout")
+	ocrScanTimeout = flag.Int("ocr.scan.timeout", 50000, "OCR scan timeout")
 }
 
 func processText(imageFile string) (string, error) {
