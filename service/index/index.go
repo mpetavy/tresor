@@ -1,11 +1,13 @@
 package index
 
 import (
+	"net/http"
+
+	"github.com/mpetavy/tresor/utils"
+
 	"github.com/gorilla/mux"
 	"github.com/mpetavy/common"
 	"github.com/mpetavy/tresor/service/errors"
-	"github.com/mpetavy/tresor/tools"
-	"net/http"
 )
 
 const (
@@ -21,7 +23,7 @@ type Index interface {
 	Init(*common.Jason) error
 	Start() error
 	Stop() error
-	Index(path string, options *Options) (string, *Mapping, *[]byte, string, tools.Orientation, error)
+	Index(path string, options *Options) (string, *Mapping, *[]byte, string, utils.Orientation, error)
 }
 
 type instance struct {

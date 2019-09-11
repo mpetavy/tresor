@@ -1,15 +1,16 @@
-package tools
+package utils
 
 import (
 	"fmt"
-	"github.com/fogleman/gg"
-	"github.com/mpetavy/common"
-	"github.com/stretchr/testify/assert"
 	"image"
 	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/fogleman/gg"
+	"github.com/mpetavy/common"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -47,7 +48,9 @@ func TestOcr(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	defer os.Remove(f.Name())
+	defer func() {
+		common.IgnoreError(os.Remove(f.Name()))
+	}()
 
 	img1 := dc.Image()
 
