@@ -1,45 +1,37 @@
 {
-  "services" : [
-    {
-      "name": "index",
-      "type": "index",
-      "driver": ""
+    "flags": {
+        "loglevel": "debug",
+        "user.homedir@windows": "d:/"
     },
-    {
-      "name": "db",
-      "type": "db",
-      "driver": "pgsql",
-      "username": "postgres",
-      "password": "postgres",
-      "host": "localhost",
-      "port": "5432",
-      "database": "tresor"
-    },
-//    {
-//      "name": "storage",
-//      "type": "storage",
-//      "driver": "fs",
-//      "rebuild": "true",
-//      "volumes": [
-//        {
-//          "name": "dicom",
-//          "path": "~/Bilder/500 Patients"
-//        }
-//      ]
-//    }
-    {
-      "name": "storage",
-      "type": "storage",
-      "driver": "sha",
-      "rebuild": "true",
-      "volumes": [
+    "services": [
         {
-          "name": "sample",
-          "path": "~/archive/sample",
-          "flat": "true",
-          "zip": "true"
+            "name": "index",
+            "type": "index",
+            "driver": ""
+        },
+        {
+            "name": "db",
+            "type": "db",
+            "driver": "pgsql",
+            "username": "postgres",
+            "password": "postgres",
+            "host": "localhost",
+            "port": "5432",
+            "database": "tresor"
+        },
+        {
+            "name": "storage",
+            "type": "storage",
+            "driver": "sha",
+            "rebuild": "true",
+            "volumes": [
+                {
+                    "name": "sample",
+                    "path": "~/archive/sample",
+                    "flat": "true",
+                    "zip": "true"
+                }
+            ]
         }
-      ]
-    }
-  ]
+    ]
 }
