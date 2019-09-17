@@ -16,20 +16,20 @@
             "username": "postgres",
             "password": "postgres",
             "host": "localhost",
-            "port": "5432",
+            "port": 5432,
             "database": "tresor"
         },
         {
             "name": "storage",
             "type": "storage",
             "driver": "sha",
-            "rebuild": "true",
+            "rebuild": true,
             "volumes": [
                 {
                     "name": "sample",
                     "path": "~/archive/sample",
-                    "flat": "true",
-                    "zip": "true"
+                    "flat": true,
+                    "zip": true
                 }
             ]
         }
