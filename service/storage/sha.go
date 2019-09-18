@@ -404,7 +404,7 @@ func (sha *Sha) find(uid *ShaUID, options *Options) (*ShaVolume, string, error) 
 					return nil, "", err
 				}
 
-				err = os.MkdirAll(uidDir, os.ModePerm)
+				err = os.MkdirAll(uidDir, common.DirFileMode)
 				if err != nil {
 					return nil, "", err
 				}
@@ -510,7 +510,7 @@ func (sha *Sha) Store(suid string, source io.Reader, options *Options) (string, 
 		}
 	}
 
-	err = os.MkdirAll(filepath.Dir(path), os.ModePerm)
+	err = os.MkdirAll(filepath.Dir(path), common.DirFileMode)
 	if err != nil {
 		return "", nil, err
 	}
