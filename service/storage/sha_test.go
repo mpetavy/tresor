@@ -222,7 +222,7 @@ func TestFilestorage(t *testing.T) {
 		volNames[i] = fmt.Sprintf("volume #%d", i)
 		path := filepath.Join(tempDir, volNames[i])
 
-		err := os.MkdirAll(path, os.ModePerm)
+		err := os.MkdirAll(path, common.DirFileMode)
 		if err != nil {
 			t.Fatal(err)
 		}
