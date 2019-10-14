@@ -520,7 +520,7 @@ func (sha *Sha) Store(suid string, source io.Reader, options *Options) (string, 
 		return "", nil, err
 	}
 	defer func() {
-		common.IgnoreError(dest.Close())
+		common.Ignore(dest.Close())
 	}()
 
 	h, err := hash.New(hash.MD5)
@@ -559,7 +559,7 @@ func (sha *Sha) Load(suid string, dest io.Writer, options *Options) (string, *[]
 		return "", nil, -1, err
 	}
 	defer func() {
-		common.IgnoreError(source.Close())
+		common.Ignore(source.Close())
 	}()
 
 	h, err := hash.New(hash.MD5)
