@@ -59,7 +59,7 @@ func LoadImage(path string) (img image.Image, err error) {
 	}
 
 	defer func() {
-		common.IgnoreError(f.Close())
+		common.Ignore(f.Close())
 	}()
 
 	img, err = tiff.Decode(f)
@@ -104,7 +104,7 @@ func SaveJpeg(source image.Image, filename string) error {
 	}
 
 	defer func() {
-		common.IgnoreError(f.Close())
+		common.Ignore(f.Close())
 	}()
 
 	return EncodeJpeg(source, f)

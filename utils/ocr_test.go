@@ -49,7 +49,7 @@ func TestOcr(t *testing.T) {
 	}
 
 	defer func() {
-		common.IgnoreError(os.Remove(f.Name()))
+		common.Ignore(os.Remove(f.Name()))
 	}()
 
 	img1 := dc.Image()
