@@ -139,7 +139,7 @@ func (defaultIndexer *DefaultIndexer) Index(path string, options *Options) (stri
 		}
 	} else {
 		switch mimeType {
-		case common.MIMETYPE_APPLICATION_DICOM.MimeType:
+		case common.MimetypeApplicationDicom.MimeType:
 			mapping, thumbnail, err = defaultIndexer.indexDicom(path, buffer, options)
 		}
 	}
