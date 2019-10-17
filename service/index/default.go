@@ -126,7 +126,7 @@ func (defaultIndexer *DefaultIndexer) Index(path string, options *Options) (stri
 		return mimeType, mapping, thumbnail, fulltext, orientation, err
 	}
 
-	mimeType, _ = common.DetectMimeType(buffer)
+	mimeType = common.DetectMimeType(path, buffer).MimeType
 
 	if !readComplete {
 		buffer = buffer[0:0]
