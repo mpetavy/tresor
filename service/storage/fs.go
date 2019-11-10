@@ -281,7 +281,7 @@ func (fs *Fs) Store(suid string, source io.Reader, options *Options) (string, *[
 		}
 	}
 
-	err = os.MkdirAll(filepath.Dir(path), common.DirFileMode)
+	err = os.MkdirAll(filepath.Dir(path), common.DefaultDirMode)
 	if err != nil {
 		return "", nil, err
 	}

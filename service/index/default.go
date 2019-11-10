@@ -74,7 +74,7 @@ func (defaultIndexer *DefaultIndexer) indexDicom(path string, buffer []byte, opt
 							return nil, nil, err
 						}
 
-						err = ioutil.WriteFile(imageFile.Name(), frame, common.FileFileMode)
+						err = ioutil.WriteFile(imageFile.Name(), frame, common.DefaultFileMode)
 						if err != nil {
 							return nil, nil, err
 						}
