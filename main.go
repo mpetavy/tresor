@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -24,7 +25,7 @@ var (
 )
 
 func init() {
-	common.Init("0.0.1", "2018", "archive solution", "mpetavy", common.APACHE, true, start, stop, nil, 0)
+	common.Init("0.0.1", "2018", "archive solution", "mpetavy", fmt.Sprintf("https://github.com/mpetavy/%s", common.Title()), common.APACHE, true, start, stop, nil, 0)
 
 	serverAddress = flag.String("serverport", ":8100", "Server address:port")
 	serverReadTimeout = flag.Int("serverreadtimeout", 5000, "Server READ timeout")
