@@ -128,7 +128,7 @@ func Ocr(imageFile string) (string, Orientation, error) {
 	orientation, err := processOrientation(imageFile)
 
 	if err != nil {
-		common.WarnError(err)
+		common.Error(err)
 	}
 
 	if orientation != 0 {
