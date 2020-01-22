@@ -1,7 +1,6 @@
 {
     "flags": {
-        "loglevel": "debug",
-        "user.homedir@windows": "d:/"
+        "log.verbose": "false"
     },
     "services": [
         {
@@ -22,16 +21,28 @@
         {
             "name": "storage",
             "type": "storage",
-            "driver": "sha",
+            "driver": "fs",
             "rebuild": true,
             "volumes": [
                 {
-                    "name": "sample",
-                    "path": "~/archive/sample",
-                    "flat": true,
-                    "zip": true
+                    "name": "dicom",
+                    "path": "d:/Dicom-Files"
                 }
             ]
         }
+        //        {
+        //            "name": "storage",
+        //            "type": "storage",
+        //            "driver": "sha",
+        //            "rebuild": true,
+        //            "volumes": [
+        //                {
+        //                    "name": "sample",
+        //                    "path": "~/archive/sample",
+        //                    "flat": true,
+        //                    "zip": true
+        //                }
+        //            ]
+        //        }
     ]
 }

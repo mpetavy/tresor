@@ -23,12 +23,12 @@ type Index interface {
 	Init(*common.Jason) error
 	Start() error
 	Stop() error
-	Index(path string, options *Options) (string, *Mapping, *[]byte, string, utils.Orientation, error)
+	Index(path string, options *Options) (string, Mapping, *[]byte, string, utils.Orientation, error)
 }
 
 type instance struct {
 	cfg  *common.Jason
-	pool *chan *Index
+	pool chan Index
 }
 
 var instances map[string]instance
@@ -38,17 +38,17 @@ func init() {
 }
 
 func Init(name string, cfg *common.Jason, router *mux.Router) error {
-	pool := make(chan *Index, 10)
+	pool := make(chan Index, 10)
 	for i := 0; i < 10; i++ {
-		h, err := create(cfg)
+		index, err := create(cfg)
 		if err != nil {
 			common.Fatal(err)
 		}
 
-		pool <- h
+		pool <- index
 	}
 
-	instances[name] = instance{cfg, &pool}
+	instances[name] = instance{cfg, pool}
 
 	router.PathPrefix("/"+name).Subrouter().HandleFunc("/{uid}", func(rw http.ResponseWriter, r *http.Request) {
 		//v := mux.Vars(r)
@@ -72,36 +72,36 @@ func Init(name string, cfg *common.Jason, router *mux.Router) error {
 func Close() {
 }
 
-func Get(name string) *Index {
+func Get(name string) Index {
 	i, ok := instances[name]
 
 	if !ok {
 		common.Fatal(&errors.ErrUnknownService{name})
 	}
 
-	index := <-*(i.pool)
+	index := <-i.pool
 
 	return index
 }
 
-func Put(name string, index *Index) {
+func Put(name string, index Index) {
 	i, ok := instances[name]
 
 	if !ok {
 		common.Fatal(&errors.ErrUnknownService{name})
 	}
 
-	*(i.pool) <- index
+	i.pool <- index
 }
 
-func Exec(name string, fn func(index *Index) error) error {
+func Exec(name string, fn func(index Index) error) error {
 	index := Get(name)
 	defer Put(name, index)
 
 	return fn(index)
 }
 
-func create(cfg *common.Jason) (*Index, error) {
+func create(cfg *common.Jason) (Index, error) {
 	driver, err := cfg.String("driver")
 	if err != nil {
 		return nil, err
@@ -129,5 +129,5 @@ func create(cfg *common.Jason) (*Index, error) {
 		return nil, err
 	}
 
-	return &index, nil
+	return index, nil
 }

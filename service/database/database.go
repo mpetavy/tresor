@@ -38,7 +38,7 @@ type Database interface {
 
 type instance struct {
 	cfg  *common.Jason
-	pool *chan *Database
+	pool chan Database
 }
 
 var instances map[string]instance
@@ -48,7 +48,7 @@ func init() {
 }
 
 func Init(name string, cfg *common.Jason) error {
-	pool := make(chan *Database, 10)
+	pool := make(chan Database, 10)
 	for i := 0; i < 10; i++ {
 		db, err := create(cfg)
 		if err != nil {
@@ -60,49 +60,49 @@ func Init(name string, cfg *common.Jason) error {
 
 	common.Info("Registered database '%s'", name)
 
-	instances[name] = instance{cfg, &pool}
+	instances[name] = instance{cfg, pool}
 
 	common.Info("Create Schema %s", name)
 
 	db := Get(name)
 	defer Put(name, db)
 
-	return (*db).CreateSchema([]interface{}{&models.User{}, &models.Bucket{}})
+	return db.CreateSchema([]interface{}{&models.User{}, &models.Bucket{}})
 }
 
 func Close() {
 }
 
-func Get(name string) *Database {
+func Get(name string) Database {
 	i, ok := instances[name]
 
 	if !ok {
 		common.Fatal(&errors.ErrUnknownService{name})
 	}
 
-	db := <-*(i.pool)
+	db := <-i.pool
 
 	return db
 }
 
-func Put(name string, db *Database) {
+func Put(name string, db Database) {
 	i, ok := instances[name]
 
 	if !ok {
 		common.Fatal(&errors.ErrUnknownService{name})
 	}
 
-	*(i.pool) <- db
+	i.pool <- db
 }
 
-func Exec(name string, fn func(db *Database) error) error {
+func Exec(name string, fn func(db Database) error) error {
 	db := Get(name)
 	defer Put(name, db)
 
 	return fn(db)
 }
 
-func create(cfg *common.Jason) (*Database, error) {
+func create(cfg *common.Jason) (Database, error) {
 	driver, err := cfg.String("driver")
 	if err != nil {
 		return nil, err
@@ -137,5 +137,5 @@ func create(cfg *common.Jason) (*Database, error) {
 		return nil, err
 	}
 
-	return &db, nil
+	return db, nil
 }
