@@ -41,7 +41,7 @@ func (defaultIndexer *DefaultIndexer) Stop() error {
 	return nil
 }
 
-func (defaultIndexer *DefaultIndexer) indexDicom(path string, buffer []byte, options *Options) (*Mapping, *[]byte, error) {
+func (defaultIndexer *DefaultIndexer) indexDicom(path string, buffer []byte, options *Options) (Mapping, *[]byte, error) {
 	mapping := make(Mapping)
 
 	var imageFile *os.File
@@ -55,18 +55,18 @@ func (defaultIndexer *DefaultIndexer) indexDicom(path string, buffer []byte, opt
 	}
 
 	if err == nil {
-		representativeFrameNumber := 0
+		var representativeFrameNumber uint16
 
 		elem, err := dataset.FindElementByTag(dicomtag.RepresentativeFrameNumber)
 		if err == nil {
-			representativeFrameNumber = elem.Value[0].(int)
+			representativeFrameNumber, err = elem.GetUInt16()
 		}
 
 		for _, elem := range dataset.Elements {
 			if elem.Tag == dicomtag.PixelData {
 				data := elem.Value[0].(dicom.PixelDataInfo)
 				for i, frame := range data.Frames {
-					if i == representativeFrameNumber {
+					if uint16(i) == representativeFrameNumber {
 						var err error
 
 						imageFile, err = common.CreateTempFile()
@@ -98,13 +98,13 @@ func (defaultIndexer *DefaultIndexer) indexDicom(path string, buffer []byte, opt
 		}()
 	}
 
-	return &mapping, nil, err
+	return mapping, nil, err
 }
 
-func (defaultIndexer *DefaultIndexer) Index(path string, options *Options) (string, *Mapping, *[]byte, string, utils.Orientation, error) {
+func (defaultIndexer *DefaultIndexer) Index(path string, options *Options) (string, Mapping, *[]byte, string, utils.Orientation, error) {
 	var err error
 	var mimeType string
-	var mapping *Mapping
+	var mapping Mapping
 	var thumbnail *[]byte
 	var buffer []byte
 	var fulltext string

@@ -16,6 +16,9 @@ import (
 // https://github.com/sadlil/go-trigger
 // https://github.com/antonholmquist/jason
 
+// Http service
+// PDF indexer
+
 var (
 	serverAddress      *string
 	serverReadTimeout  *int

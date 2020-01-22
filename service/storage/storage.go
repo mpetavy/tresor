@@ -33,7 +33,7 @@ type Storage interface {
 
 type instance struct {
 	cfg  *common.Jason
-	pool *chan *Storage
+	pool chan Storage
 }
 
 var instances map[string]instance
@@ -43,17 +43,17 @@ func init() {
 }
 
 func Init(name string, cfg *common.Jason, router *mux.Router) error {
-	pool := make(chan *Storage, 10)
+	pool := make(chan Storage, 10)
 	for i := 0; i < 10; i++ {
-		db, err := create(cfg)
+		storage, err := create(cfg)
 		if err != nil {
 			common.Fatal(err)
 		}
 
-		pool <- db
+		pool <- storage
 	}
 
-	instances[name] = instance{cfg, &pool}
+	instances[name] = instance{cfg, pool}
 
 	router.PathPrefix("/"+name).Subrouter().HandleFunc("/{uid}", func(rw http.ResponseWriter, r *http.Request) {
 		v := mux.Vars(r)
@@ -61,10 +61,8 @@ func Init(name string, cfg *common.Jason, router *mux.Router) error {
 		storage := Get(name)
 		defer Put(name, storage)
 
-		_, _, _, err := (*storage).Load(v["uid"], rw, nil)
-		if err != nil {
-			common.Error(err)
-
+		_, _, _, err := storage.Load(v["uid"], rw, nil)
+		if common.Error(err) {
 			return
 		}
 	})
@@ -85,7 +83,7 @@ func Init(name string, cfg *common.Jason, router *mux.Router) error {
 
 		var c int
 
-		c, err = (*storage).Rebuild()
+		c, err = storage.Rebuild()
 		if err != nil {
 			return err
 		}
@@ -99,29 +97,29 @@ func Init(name string, cfg *common.Jason, router *mux.Router) error {
 func Close() {
 }
 
-func Get(name string) *Storage {
+func Get(name string) Storage {
 	i, ok := instances[name]
 
 	if !ok {
 		common.Fatal(&errors.ErrUnknownService{name})
 	}
 
-	storage := <-*(i.pool)
+	storage := <-i.pool
 
 	return storage
 }
 
-func Put(name string, storage *Storage) {
+func Put(name string, storage Storage) {
 	i, ok := instances[name]
 
 	if !ok {
 		common.Fatal(&errors.ErrUnknownService{name})
 	}
 
-	*(i.pool) <- storage
+	i.pool <- storage
 }
 
-func Exec(name string, fn func(storage *Storage) error) error {
+func Exec(name string, fn func(storage Storage) error) error {
 	storage := Get(name)
 	defer Put(name, storage)
 
@@ -138,7 +136,7 @@ func getFromList(l list.List, index int) interface{} {
 	return e.Value
 }
 
-func create(cfg *common.Jason) (*Storage, error) {
+func create(cfg *common.Jason) (Storage, error) {
 	driver, err := cfg.String("driver")
 	if err != nil {
 		return nil, err
@@ -171,5 +169,5 @@ func create(cfg *common.Jason) (*Storage, error) {
 		return nil, err
 	}
 
-	return &storage, nil
+	return storage, nil
 }

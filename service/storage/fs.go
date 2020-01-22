@@ -290,7 +290,9 @@ func (fs *Fs) Store(suid string, source io.Reader, options *Options) (string, *[
 	if err != nil {
 		return "", nil, err
 	}
-	defer dest.Close()
+	defer func() {
+		common.Error(dest.Close())
+	}()
 
 	h, err := hash.New(hash.MD5)
 	if err != nil {
@@ -327,7 +329,9 @@ func (fs *Fs) Load(suid string, dest io.Writer, options *Options) (string, *[]by
 	if err != nil {
 		return "", nil, -1, err
 	}
-	defer source.Close()
+	defer func() {
+		common.Error(source.Close())
+	}()
 
 	h, err := hash.New(hash.MD5)
 	if err != nil {
@@ -408,7 +412,7 @@ func (fs *Fs) Delete(suid string, options *Options) error {
 	return nil
 }
 
-func (fs *Fs) rebuildBucket(wg *sync.WaitGroup, uid *FsUID) {
+func (fs *Fs) rebuildBucket(wg *sync.WaitGroup, uid *FsUID) error {
 	defer wg.Done()
 
 	bucket := models.NewBucket()
@@ -417,32 +421,30 @@ func (fs *Fs) rebuildBucket(wg *sync.WaitGroup, uid *FsUID) {
 	buffer := bytes.Buffer{}
 
 	path, h, n, err := fs.Load(uid.String(), &buffer, nil)
-	if err != nil {
-		common.Error(err)
-		return
+	if common.Error(err) {
+		return err
 	}
 
 	bucket.FileName = append(bucket.FileName, uid.String())
 	bucket.FileHash = append(bucket.FileHash, hex.EncodeToString(*h))
 
 	var mimeType string
-	var mapping *index.Mapping
+	var mapping index.Mapping
 
-	err = index.Exec("index", func(index *index.Index) error {
-		mimeType, mapping, _, _, _, err = (*index).Index(path, nil)
+	err = index.Exec("index", func(index index.Index) error {
+		mimeType, mapping, _, _, _, err = index.Index(path, nil)
 
 		return err
 	})
-	if err != nil {
-		common.Error(err)
-		return
+	if common.Error(err) {
+		return err
 	}
 
 	if len(mimeType) > 0 {
 		bucket.FileType = append(bucket.FileType, mimeType)
 	}
 
-	for k, v := range *mapping {
+	for k, v := range mapping {
 		bucket.Prop[k] = v
 	}
 
@@ -450,27 +452,28 @@ func (fs *Fs) rebuildBucket(wg *sync.WaitGroup, uid *FsUID) {
 
 	common.Debug("%s: %s", (*uid).String(), hex.EncodeToString(*h))
 
-	err = database.Exec("db", func(db *database.Database) error {
-		return (*db).SaveBucket(&bucket, nil)
+	err = database.Exec("db", func(db database.Database) error {
+		return db.SaveBucket(&bucket, nil)
 	})
-	if err != nil {
-		common.Error(err)
-		return
+	if common.Error(err) {
+		return err
 	}
+
+	return nil
 }
 
 func (fs *Fs) Rebuild() (int, error) {
 	cluster.Lock(cluster.STORAGE(fs.name))
 	defer cluster.Unlock(cluster.STORAGE(fs.name))
 
-	err := database.Exec("db", func(db *database.Database) error {
-		return (*db).SwitchIndices([]interface{}{models.NewBucket()}, false)
+	err := database.Exec("db", func(db database.Database) error {
+		return db.SwitchIndices([]interface{}{models.NewBucket()}, false)
 	})
-	if err != nil {
+	if common.Error(err) {
 		return -1, err
 	}
-	defer common.Error(database.Exec("db", func(db *database.Database) error {
-		return (*db).SwitchIndices([]interface{}{models.NewBucket()}, true)
+	defer common.Error(database.Exec("db", func(db database.Database) error {
+		return db.SwitchIndices([]interface{}{models.NewBucket()}, true)
 	}))
 
 	c := 0
@@ -484,7 +487,9 @@ func (fs *Fs) Rebuild() (int, error) {
 					path = path[len(volume.Path)+1:]
 
 					wg.Add(1)
-					go fs.rebuildBucket(&wg, NewFsUID(path))
+					go func() {
+						common.Error(fs.rebuildBucket(&wg, NewFsUID(path)))
+					}()
 				}
 
 				return nil

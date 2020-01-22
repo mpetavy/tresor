@@ -643,7 +643,7 @@ func (sha *Sha) Delete(suid string, options *Options) error {
 
 type indexResult struct {
 	mimeType    string
-	mapping     *index.Mapping
+	mapping     index.Mapping
 	thumbnail   *[]byte
 	fulltext    string
 	orientation utils.Orientation
@@ -678,8 +678,8 @@ func (sha *Sha) rebuildBucket(wg *sync.WaitGroup, uid *ShaUID, version int) {
 		go func(page int, path string) {
 			ir := indexResult{}
 
-			err = index.Exec("index", func(index *index.Index) error {
-				ir.mimeType, ir.mapping, ir.thumbnail, ir.fulltext, ir.orientation, err = (*index).Index(path, nil)
+			err = index.Exec("index", func(index index.Index) error {
+				ir.mimeType, ir.mapping, ir.thumbnail, ir.fulltext, ir.orientation, err = index.Index(path, nil)
 
 				return err
 			})
@@ -705,8 +705,8 @@ func (sha *Sha) rebuildBucket(wg *sync.WaitGroup, uid *ShaUID, version int) {
 		bucket.FileType = append(bucket.FileType, ir.mimeType)
 	}
 
-	err := database.Exec("db", func(db *database.Database) error {
-		return (*db).SaveBucket(&bucket, nil)
+	err := database.Exec("db", func(db database.Database) error {
+		return db.SaveBucket(&bucket, nil)
 	})
 	if err != nil {
 		common.Error(err)
