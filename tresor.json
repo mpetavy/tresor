@@ -1,6 +1,7 @@
 {
     "flags": {
-        "log.verbose": "false"
+        "log.verbose": "false",
+        "service": "simulate"
     },
     "services": [
         {
