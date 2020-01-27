@@ -3,14 +3,13 @@ package utils
 import (
 	"flag"
 	"fmt"
+	"golang.org/x/image/tiff"
 	"image"
 	"image/draw"
 	"io"
 	"os"
 
 	"github.com/mpetavy/common"
-
-	"github.com/pdfcpu/pdfcpu/tiff"
 
 	"github.com/disintegration/imaging"
 )
