@@ -53,7 +53,7 @@ func LoadImage(path string) (img image.Image, err error) {
 	}
 
 	f, err := os.Open(path)
-	if err != nil {
+	if common.Error(err) {
 		return nil, err
 	}
 
@@ -62,7 +62,7 @@ func LoadImage(path string) (img image.Image, err error) {
 	}()
 
 	img, err = tiff.Decode(f)
-	if err != nil {
+	if common.Error(err) {
 		return nil, err
 	}
 
@@ -98,7 +98,7 @@ func EncodeJpeg(source image.Image, w io.Writer) error {
 
 func SaveJpeg(source image.Image, filename string) error {
 	f, err := os.Create(filename)
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
 

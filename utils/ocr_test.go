@@ -40,11 +40,11 @@ func TestOcr(t *testing.T) {
 	dc.DrawStringAnchored(msg, 1648/2, 600, 0.5, 0.5)
 
 	f, err := ioutil.TempFile("", "")
-	if err != nil {
+	if common.Error(err) {
 		t.Fatal(err)
 	}
 	err = f.Close()
-	if err != nil {
+	if common.Error(err) {
 		t.Fatal(err)
 	}
 
@@ -60,12 +60,12 @@ func TestOcr(t *testing.T) {
 		}
 
 		err := SaveJpeg(img1, f.Name())
-		if err != nil {
+		if common.Error(err) {
 			t.Fatal(err)
 		}
 
 		txt, orientation, err := Ocr(f.Name())
-		if err != nil {
+		if common.Error(err) {
 			t.Fatal(err)
 		}
 

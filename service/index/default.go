@@ -25,7 +25,7 @@ func NewDefaultIndexer() (*DefaultIndexer, error) {
 
 func (defaultIndexer *DefaultIndexer) Init(cfg *common.Jason) error {
 	name, err := cfg.String("name")
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
 	defaultIndexer.name = name
@@ -70,12 +70,12 @@ func (defaultIndexer *DefaultIndexer) indexDicom(path string, buffer []byte, opt
 						var err error
 
 						imageFile, err = common.CreateTempFile()
-						if err != nil {
+						if common.Error(err) {
 							return nil, nil, err
 						}
 
 						err = ioutil.WriteFile(imageFile.Name(), frame, common.DefaultFileMode)
-						if err != nil {
+						if common.Error(err) {
 							return nil, nil, err
 						}
 						break
@@ -111,7 +111,7 @@ func (defaultIndexer *DefaultIndexer) Index(path string, options *Options) (stri
 	var orientation utils.Orientation
 
 	s, err := common.FileSize(path)
-	if err != nil {
+	if common.Error(err) {
 		return mimeType, mapping, thumbnail, fulltext, orientation, err
 	}
 
@@ -122,7 +122,7 @@ func (defaultIndexer *DefaultIndexer) Index(path string, options *Options) (stri
 	} else {
 		buffer, err = common.ReadHeader(path)
 	}
-	if err != nil {
+	if common.Error(err) {
 		return mimeType, mapping, thumbnail, fulltext, orientation, err
 	}
 
@@ -134,7 +134,7 @@ func (defaultIndexer *DefaultIndexer) Index(path string, options *Options) (stri
 
 	if common.IsImageMimeType(mimeType) {
 		fulltext, orientation, err = utils.Ocr(path)
-		if err != nil {
+		if common.Error(err) {
 			return mimeType, mapping, thumbnail, fulltext, orientation, err
 		}
 	} else {

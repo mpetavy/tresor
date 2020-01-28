@@ -70,7 +70,7 @@ func NewFsVolume(name string, path string) (*FsVolume, error) {
 	volume := FsVolume{Name: name, Path: common.CleanPath(path)}
 
 	b, err := common.FileExists(path)
-	if err != nil {
+	if common.Error(err) {
 		return nil, err
 	}
 
@@ -85,7 +85,7 @@ func NewFs() (*Fs, error) {
 	fs := &Fs{volumes: make(map[string]*FsVolume), mu: new(sync.Mutex)}
 
 	path, err := common.CreateTempDir()
-	if err != nil {
+	if common.Error(err) {
 		return nil, err
 	}
 
@@ -96,30 +96,30 @@ func NewFs() (*Fs, error) {
 
 func (fs *Fs) Init(cfg *common.Jason) error {
 	name, err := cfg.String("name")
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
 	fs.name = name
 
 	for i := 0; i < cfg.ArrayCount("volumes"); i++ {
 		v, err := cfg.Array("volumes", i)
-		if err != nil {
+		if common.Error(err) {
 			return err
 		}
 
 		volumeName, err := v.String("name")
-		if err != nil {
+		if common.Error(err) {
 			return err
 		}
 		path, err := v.String("path")
-		if err != nil {
+		if common.Error(err) {
 			return err
 		}
 
 		path = common.CleanPath(path)
 
 		b, err := common.FileExists(path)
-		if err != nil {
+		if common.Error(err) {
 			return err
 		}
 
@@ -128,7 +128,7 @@ func (fs *Fs) Init(cfg *common.Jason) error {
 		}
 
 		vol, err := NewFsVolume(volumeName, path)
-		if err != nil {
+		if common.Error(err) {
 			return err
 		}
 
@@ -210,12 +210,12 @@ func (fs *Fs) find(uid *FsUID, options *Options) (*FsVolume, string, error) {
 		volume := fs.volumes[vn]
 
 		path, err := createFsPath(volume.Path, uid)
-		if err != nil {
+		if common.Error(err) {
 			return nil, "", err
 		}
 
 		b, err := common.FileExists(path)
-		if err != nil {
+		if common.Error(err) {
 			return nil, "", err
 		}
 
@@ -231,7 +231,7 @@ func (fs *Fs) find(uid *FsUID, options *Options) (*FsVolume, string, error) {
 
 func (fs *Fs) Store(suid string, source io.Reader, options *Options) (string, *[]byte, error) {
 	uid, err := ParseFsUID(suid)
-	if err != nil {
+	if common.Error(err) {
 		return "", nil, err
 	}
 
@@ -261,18 +261,18 @@ func (fs *Fs) Store(suid string, source io.Reader, options *Options) (string, *[
 	defer cluster.Unlock(cluster.STORAGE_VOLUME(fs.name, volume.Name))
 
 	path, err := createFsPath(volume.Path, uid)
-	if err != nil {
+	if common.Error(err) {
 		return "", nil, err
 	}
 
 	b, err := common.FileExists(path)
-	if err != nil {
+	if common.Error(err) {
 		return "", nil, err
 	}
 
 	if b {
 		fs, err := common.FileSize(path)
-		if err != nil {
+		if common.Error(err) {
 			return "", nil, err
 		}
 
@@ -282,12 +282,12 @@ func (fs *Fs) Store(suid string, source io.Reader, options *Options) (string, *[
 	}
 
 	err = os.MkdirAll(filepath.Dir(path), common.DefaultDirMode)
-	if err != nil {
+	if common.Error(err) {
 		return "", nil, err
 	}
 
 	dest, err := os.Create(path)
-	if err != nil {
+	if common.Error(err) {
 		return "", nil, err
 	}
 	defer func() {
@@ -295,12 +295,12 @@ func (fs *Fs) Store(suid string, source io.Reader, options *Options) (string, *[
 	}()
 
 	h, err := hash.New(hash.MD5)
-	if err != nil {
+	if common.Error(err) {
 		return "", nil, err
 	}
 
 	_, err = io.Copy(io.MultiWriter(dest, h), source)
-	if err != nil {
+	if common.Error(err) {
 		return "", nil, err
 	}
 
@@ -313,7 +313,7 @@ func (fs *Fs) Store(suid string, source io.Reader, options *Options) (string, *[
 
 func (fs *Fs) Load(suid string, dest io.Writer, options *Options) (string, *[]byte, int64, error) {
 	uid, err := ParseFsUID(suid)
-	if err != nil {
+	if common.Error(err) {
 		return "", nil, -1, err
 	}
 
@@ -321,12 +321,12 @@ func (fs *Fs) Load(suid string, dest io.Writer, options *Options) (string, *[]by
 	defer cluster.Unlock(cluster.STORAGE_UID(fs.name, uid.Path))
 
 	_, path, err := fs.find(uid, options)
-	if err != nil {
+	if common.Error(err) {
 		return "", nil, -1, err
 	}
 
 	source, err := os.Open(path)
-	if err != nil {
+	if common.Error(err) {
 		return "", nil, -1, err
 	}
 	defer func() {
@@ -334,12 +334,12 @@ func (fs *Fs) Load(suid string, dest io.Writer, options *Options) (string, *[]by
 	}()
 
 	h, err := hash.New(hash.MD5)
-	if err != nil {
+	if common.Error(err) {
 		return "", nil, -1, err
 	}
 
 	n, err := io.Copy(io.MultiWriter(dest, h), source)
-	if err != nil {
+	if common.Error(err) {
 		return "", nil, -1, err
 	}
 
@@ -350,7 +350,7 @@ func (fs *Fs) Load(suid string, dest io.Writer, options *Options) (string, *[]by
 
 func (fs *Fs) Delete(suid string, options *Options) error {
 	uid, err := ParseFsUID(suid)
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
 
@@ -358,7 +358,7 @@ func (fs *Fs) Delete(suid string, options *Options) error {
 	var path string
 
 	volume, path, err = fs.find(uid, options)
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
 
@@ -366,13 +366,13 @@ func (fs *Fs) Delete(suid string, options *Options) error {
 	defer cluster.Unlock(cluster.STORAGE_UID(fs.name, uid.Path))
 
 	b, err := common.IsFile(path)
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
 
 	if b {
 		err := os.Remove(path)
-		if err != nil {
+		if common.Error(err) {
 			return err
 		}
 	} else {
@@ -380,7 +380,7 @@ func (fs *Fs) Delete(suid string, options *Options) error {
 		defer cluster.Unlock(cluster.STORAGE_VOLUME(fs.name, volume.Name))
 
 		err := os.RemoveAll(path)
-		if err != nil {
+		if common.Error(err) {
 			return err
 		}
 
@@ -392,13 +392,13 @@ func (fs *Fs) Delete(suid string, options *Options) error {
 			}
 
 			files, err := ioutil.ReadDir(path)
-			if err != nil {
+			if common.Error(err) {
 				break
 			}
 
 			if len(files) == 0 {
 				err := os.RemoveAll(path)
-				if err != nil {
+				if common.Error(err) {
 					break
 				}
 			} else {
@@ -495,7 +495,7 @@ func (fs *Fs) Rebuild() (int, error) {
 				return nil
 			})
 
-			if err != nil {
+			if common.Error(err) {
 				return -1, err
 			}
 		}

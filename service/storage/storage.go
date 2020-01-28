@@ -46,7 +46,7 @@ func Init(name string, cfg *common.Jason, router *mux.Router) error {
 	pool := make(chan Storage, 10)
 	for i := 0; i < 10; i++ {
 		storage, err := create(cfg)
-		if err != nil {
+		if common.Error(err) {
 			common.Fatal(err)
 		}
 
@@ -58,19 +58,20 @@ func Init(name string, cfg *common.Jason, router *mux.Router) error {
 	router.PathPrefix("/"+name).Subrouter().HandleFunc("/{uid}", func(rw http.ResponseWriter, r *http.Request) {
 		v := mux.Vars(r)
 
-		storage := Get(name)
-		defer Put(name, storage)
+		common.Error(Exec(name, func(storage Storage) error {
+			_, _, _, err := storage.Load(v["uid"], rw, nil)
+			if common.Error(err) {
+				return err
+			}
 
-		_, _, _, err := storage.Load(v["uid"], rw, nil)
-		if common.Error(err) {
-			return
-		}
+			return nil
+		}))
 	})
 
 	common.Info("Registered storage '%s'", name)
 
 	rebuild, err := cfg.Bool("rebuild")
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
 
@@ -79,16 +80,18 @@ func Init(name string, cfg *common.Jason, router *mux.Router) error {
 
 		common.Info("Rebuild started ...")
 
-		storage := Get(name)
+		common.Error(Exec(name, func(storage Storage) error {
+			var c int
 
-		var c int
+			c, err = storage.Rebuild()
+			if common.Error(err) {
+				return err
+			}
 
-		c, err = storage.Rebuild()
-		if err != nil {
-			return err
-		}
+			common.Info("Rebuild successfully completed. time needed %v, %d buckets", time.Now().Sub(start), c)
 
-		common.Info("Rebuild successfully completed. time needed %v, %d buckets", time.Now().Sub(start), c)
+			return nil
+		}))
 	}
 
 	return nil
@@ -138,7 +141,7 @@ func getFromList(l list.List, index int) interface{} {
 
 func create(cfg *common.Jason) (Storage, error) {
 	driver, err := cfg.String("driver")
-	if err != nil {
+	if common.Error(err) {
 		return nil, err
 	}
 
@@ -147,12 +150,12 @@ func create(cfg *common.Jason) (Storage, error) {
 	switch driver {
 	case TYPE_FS:
 		storage, err = NewFs()
-		if err != nil {
+		if common.Error(err) {
 			return nil, err
 		}
 	case TYPE_SHA:
 		storage, err = NewSha()
-		if err != nil {
+		if common.Error(err) {
 			return nil, err
 		}
 	default:
@@ -160,12 +163,12 @@ func create(cfg *common.Jason) (Storage, error) {
 	}
 
 	err = storage.Init(cfg)
-	if err != nil {
+	if common.Error(err) {
 		return nil, err
 	}
 
 	err = storage.Start()
-	if err != nil {
+	if common.Error(err) {
 		return nil, err
 	}
 

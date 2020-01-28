@@ -13,11 +13,12 @@
             "name": "db",
             "type": "db",
             "driver": "pgsql",
+            "rebuild": true,
             "username": "postgres",
             "password": "postgres",
             "host": "localhost",
             "port": 5432,
-            "database": "tresor"
+            "database": "tresor1"
         },
         {
             "name": "storage",
@@ -27,7 +28,7 @@
             "volumes": [
                 {
                     "name": "dicom",
-                    "path": "d:/Dicom-Files"
+                    "path": "d:/Dicom-Files/2010"
                 }
             ]
         }

@@ -22,21 +22,21 @@ func NewMongoDB() (*MongoDB, error) {
 
 func (db *MongoDB) Init(cfg *common.Jason) error {
 	name, err := cfg.String("name")
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
 
 	db.Name = name
 
 	url, err := cfg.String("url")
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
 
 	db.URL = url
 
 	ti, err := cfg.Int("connectTimeout", 3000)
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
 
@@ -53,17 +53,21 @@ func (db *MongoDB) SwitchIndices(models []interface{}, enable bool) error {
 	return nil
 }
 
+func (db *MongoDB) Query(rows interface{}, sql string) (string, error) {
+	return "", nil
+}
+
 func (db *MongoDB) Start() error {
 	var err error
 
 	db.Ctx, _ = context.WithTimeout(context.Background(), time.Duration(db.ConnectTimeout)*time.Millisecond)
 	db.Client, err = mongo.Connect(db.Ctx, options.Client().ApplyURI(db.URL))
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
 
 	err = db.Client.Ping(db.Ctx, nil)
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
 

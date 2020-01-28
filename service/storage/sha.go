@@ -65,13 +65,13 @@ func ParseShaUID(s string) (*ShaUID, error) {
 		elements := strings.Split(elements[0], ".")
 
 		uid.Id, err = strconv.Atoi(elements[0])
-		if err != nil {
+		if common.Error(err) {
 			return nil, parseErr
 		}
 
 		if len(elements) > 1 {
 			uid.Version, err = strconv.Atoi(elements[1])
-			if err != nil {
+			if common.Error(err) {
 				return nil, parseErr
 			}
 		}
@@ -120,7 +120,7 @@ func NewShaVolume(name string, path string, flat bool, zip bool) (*ShaVolume, er
 	volume := ShaVolume{Name: name, Path: common.CleanPath(path), Flat: flat, Zip: zip}
 
 	b, err := common.FileExists(path)
-	if err != nil {
+	if common.Error(err) {
 		return nil, err
 	}
 
@@ -135,7 +135,7 @@ func NewSha() (*Sha, error) {
 	sha := &Sha{volumes: make(map[string]*ShaVolume), uid: 0, mu: new(sync.Mutex)}
 
 	path, err := common.CreateTempDir()
-	if err != nil {
+	if common.Error(err) {
 		return nil, err
 	}
 
@@ -146,38 +146,38 @@ func NewSha() (*Sha, error) {
 
 func (sha *Sha) Init(cfg *common.Jason) error {
 	name, err := cfg.String("name")
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
 	sha.name = name
 
 	for i := 0; i < cfg.ArrayCount("volumes"); i++ {
 		v, err := cfg.Array("volumes", i)
-		if err != nil {
+		if common.Error(err) {
 			return err
 		}
 
 		volumeName, err := v.String("name")
-		if err != nil {
+		if common.Error(err) {
 			return err
 		}
 		path, err := v.String("path")
-		if err != nil {
+		if common.Error(err) {
 			return err
 		}
 		flat, err := v.Bool("flat", false)
-		if err != nil {
+		if common.Error(err) {
 			return err
 		}
 		zip, err := v.Bool("zip", false)
-		if err != nil {
+		if common.Error(err) {
 			return err
 		}
 
 		path = common.CleanPath(path)
 
 		b, err := common.FileExists(path)
-		if err != nil {
+		if common.Error(err) {
 			return err
 		}
 
@@ -186,7 +186,7 @@ func (sha *Sha) Init(cfg *common.Jason) error {
 		}
 
 		vol, err := NewShaVolume(volumeName, path, flat, zip)
-		if err != nil {
+		if common.Error(err) {
 			return err
 		}
 
@@ -249,13 +249,13 @@ func (sha *Sha) currentVersion(_uid *ShaUID, path string) (int, error) {
 		var err error
 
 		_, path, err = sha.find(uid, nil)
-		if err != nil {
+		if common.Error(err) {
 			return -1, err
 		}
 	}
 
 	files, err := ioutil.ReadDir(path)
-	if err != nil {
+	if common.Error(err) {
 		return -1, err
 	}
 
@@ -268,7 +268,7 @@ func (sha *Sha) currentVersion(_uid *ShaUID, path string) (int, error) {
 	for _, file := range files {
 		if file.IsDir() {
 			v, err := strconv.Atoi(file.Name())
-			if err != nil {
+			if common.Error(err) {
 				return -1, err
 			}
 
@@ -376,23 +376,23 @@ func (sha *Sha) find(uid *ShaUID, options *Options) (*ShaVolume, string, error) 
 		volume := sha.volumes[vn]
 
 		path, err := createShaPath(volume.Path, uid, volume.Flat, false)
-		if err != nil {
+		if common.Error(err) {
 			return nil, "", err
 		}
 
 		b, err := common.FileExists(path)
-		if err != nil {
+		if common.Error(err) {
 			return nil, "", err
 		}
 
 		if !b && volume.Zip {
 			path, err = createShaPath(volume.Path, uid.withoutObject(), volume.Flat, true)
-			if err != nil {
+			if common.Error(err) {
 				return nil, "", err
 			}
 
 			b, err = common.FileExists(path)
-			if err != nil {
+			if common.Error(err) {
 				return nil, "", err
 			}
 
@@ -400,27 +400,27 @@ func (sha *Sha) find(uid *ShaUID, options *Options) (*ShaVolume, string, error) 
 				volume = sha.volumes[UNZIP]
 
 				uidDir, err := createShaPath(volume.Path, uid.withoutObject(), volume.Flat, volume.Zip)
-				if err != nil {
+				if common.Error(err) {
 					return nil, "", err
 				}
 
 				err = os.MkdirAll(uidDir, common.DefaultDirMode)
-				if err != nil {
+				if common.Error(err) {
 					return nil, "", err
 				}
 
 				err = common.Unzip(uidDir, path)
-				if err != nil {
+				if common.Error(err) {
 					return nil, "", err
 				}
 
 				path, err = createShaPath(volume.Path, uid, volume.Flat, volume.Zip)
-				if err != nil {
+				if common.Error(err) {
 					return nil, "", err
 				}
 
 				b, err = common.FileExists(path)
-				if err != nil {
+				if common.Error(err) {
 					return nil, "", err
 				}
 			}
@@ -438,7 +438,7 @@ func (sha *Sha) find(uid *ShaUID, options *Options) (*ShaVolume, string, error) 
 
 func (sha *Sha) Store(suid string, source io.Reader, options *Options) (string, *[]byte, error) {
 	uid, err := ParseShaUID(suid)
-	if err != nil {
+	if common.Error(err) {
 		return "", nil, err
 	}
 
@@ -454,13 +454,13 @@ func (sha *Sha) Store(suid string, source io.Reader, options *Options) (string, 
 		var path string
 
 		volume, path, err = sha.find(uid.withoutObject(), options)
-		if err != nil {
+		if common.Error(err) {
 			return "", nil, err
 		}
 
 		if uid.Version == 0 {
 			v, err := sha.currentVersion(nil, path)
-			if err != nil {
+			if common.Error(err) {
 				return "", nil, err
 			}
 
@@ -490,18 +490,18 @@ func (sha *Sha) Store(suid string, source io.Reader, options *Options) (string, 
 	defer cluster.Unlock(cluster.STORAGE_VOLUME(sha.name, volume.Name))
 
 	path, err := createShaPath(volume.Path, uid, volume.Flat, false)
-	if err != nil {
+	if common.Error(err) {
 		return "", nil, err
 	}
 
 	b, err := common.FileExists(path)
-	if err != nil {
+	if common.Error(err) {
 		return "", nil, err
 	}
 
 	if b {
 		sha, err := common.FileSize(path)
-		if err != nil {
+		if common.Error(err) {
 			return "", nil, err
 		}
 
@@ -511,12 +511,12 @@ func (sha *Sha) Store(suid string, source io.Reader, options *Options) (string, 
 	}
 
 	err = os.MkdirAll(filepath.Dir(path), common.DefaultDirMode)
-	if err != nil {
+	if common.Error(err) {
 		return "", nil, err
 	}
 
 	dest, err := os.Create(path)
-	if err != nil {
+	if common.Error(err) {
 		return "", nil, err
 	}
 	defer func() {
@@ -524,12 +524,12 @@ func (sha *Sha) Store(suid string, source io.Reader, options *Options) (string, 
 	}()
 
 	h, err := hash.New(hash.MD5)
-	if err != nil {
+	if common.Error(err) {
 		return "", nil, err
 	}
 
 	_, err = io.Copy(io.MultiWriter(dest, h), source)
-	if err != nil {
+	if common.Error(err) {
 		return "", nil, err
 	}
 
@@ -542,7 +542,7 @@ func (sha *Sha) Store(suid string, source io.Reader, options *Options) (string, 
 
 func (sha *Sha) Load(suid string, dest io.Writer, options *Options) (string, *[]byte, int64, error) {
 	uid, err := ParseShaUID(suid)
-	if err != nil {
+	if common.Error(err) {
 		return "", nil, -1, err
 	}
 
@@ -550,12 +550,12 @@ func (sha *Sha) Load(suid string, dest io.Writer, options *Options) (string, *[]
 	defer cluster.Unlock(cluster.STORAGE_UID(sha.name, strconv.Itoa(uid.Id)))
 
 	_, path, err := sha.find(uid, options)
-	if err != nil {
+	if common.Error(err) {
 		return "", nil, -1, err
 	}
 
 	source, err := os.Open(path)
-	if err != nil {
+	if common.Error(err) {
 		return "", nil, -1, err
 	}
 	defer func() {
@@ -563,12 +563,12 @@ func (sha *Sha) Load(suid string, dest io.Writer, options *Options) (string, *[]
 	}()
 
 	h, err := hash.New(hash.MD5)
-	if err != nil {
+	if common.Error(err) {
 		return "", nil, -1, err
 	}
 
 	n, err := io.Copy(io.MultiWriter(dest, h), source)
-	if err != nil {
+	if common.Error(err) {
 		return "", nil, -1, err
 	}
 
@@ -579,7 +579,7 @@ func (sha *Sha) Load(suid string, dest io.Writer, options *Options) (string, *[]
 
 func (sha *Sha) Delete(suid string, options *Options) error {
 	uid, err := ParseShaUID(suid)
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
 
@@ -590,18 +590,18 @@ func (sha *Sha) Delete(suid string, options *Options) error {
 	var path string
 
 	volume, path, err = sha.find(uid, options)
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
 
 	b, err := common.IsFile(path)
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
 
 	if b {
 		err := os.Remove(path)
-		if err != nil {
+		if common.Error(err) {
 			return err
 		}
 	} else {
@@ -609,7 +609,7 @@ func (sha *Sha) Delete(suid string, options *Options) error {
 		defer cluster.Unlock(cluster.STORAGE_VOLUME(sha.name, volume.Name))
 
 		err := os.RemoveAll(path)
-		if err != nil {
+		if common.Error(err) {
 			return err
 		}
 
@@ -621,13 +621,13 @@ func (sha *Sha) Delete(suid string, options *Options) error {
 			}
 
 			files, err := ioutil.ReadDir(path)
-			if err != nil {
+			if common.Error(err) {
 				break
 			}
 
 			if len(files) == 0 {
 				err := os.RemoveAll(path)
-				if err != nil {
+				if common.Error(err) {
 					break
 				}
 			} else {
@@ -664,7 +664,7 @@ func (sha *Sha) rebuildBucket(wg *sync.WaitGroup, uid *ShaUID, version int) {
 		uid.Object = PAGE + "." + strconv.Itoa(page)
 
 		path, h, n, err := sha.Load(uid.String(), ioutil.Discard, nil)
-		if err != nil {
+		if common.Error(err) {
 			if page == 1 {
 				common.Error(err)
 			}
@@ -683,7 +683,7 @@ func (sha *Sha) rebuildBucket(wg *sync.WaitGroup, uid *ShaUID, version int) {
 
 				return err
 			})
-			if err != nil {
+			if common.Error(err) {
 				common.Error(err)
 				return
 			}
@@ -708,7 +708,7 @@ func (sha *Sha) rebuildBucket(wg *sync.WaitGroup, uid *ShaUID, version int) {
 	err := database.Exec("db", func(db database.Database) error {
 		return db.SaveBucket(&bucket, nil)
 	})
-	if err != nil {
+	if common.Error(err) {
 		common.Error(err)
 		return
 	}

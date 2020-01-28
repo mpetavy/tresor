@@ -16,7 +16,7 @@ func NewStormDB() (*StormDB, error) {
 
 func (db *StormDB) Init(cfg *common.Jason) error {
 	path, err := cfg.String("path")
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
 
@@ -31,6 +31,10 @@ func (db *StormDB) CreateSchema([]interface{}) error {
 
 func (db *StormDB) SwitchIndices(models []interface{}, enable bool) error {
 	return nil
+}
+
+func (db *StormDB) Query(rows interface{}, sql string) (string, error) {
+	return "", nil
 }
 
 func (db *StormDB) Start() error {

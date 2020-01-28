@@ -51,7 +51,7 @@ func TestCreatePath(t *testing.T) {
 
 	for _, test := range tests {
 		p, err := createShaPath("", test.Value, test.Flat, test.Zip)
-		if err != nil {
+		if common.Fatal(err) {
 			t.Fatal(err)
 		}
 		assert.Equal(t, test.Expected, p)
@@ -60,18 +60,18 @@ func TestCreatePath(t *testing.T) {
 
 func TestBasicArchive(t *testing.T) {
 	path, err := common.CreateTempDir()
-	if err != nil {
+	if common.Error(err) {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(path)
 
 	fs, err := NewSha()
-	if err != nil {
+	if common.Error(err) {
 		t.Fatal(err)
 	}
 
 	v, err := NewShaVolume("test", path, false, false)
-	if err != nil {
+	if common.Error(err) {
 		t.Fatal(err)
 	}
 
@@ -87,12 +87,12 @@ func TestBasicArchive(t *testing.T) {
 				uid.Object = PAGE + "." + strconv.Itoa(page)
 
 				suid, _, err := fs.Store(uid.String(), bytes.NewReader([]byte(s)), &Options{VolumeName: "test"})
-				if err != nil {
+				if common.Error(err) {
 					t.Fatal(err)
 				}
 
 				uid, err = ParseShaUID(suid)
-				if err != nil {
+				if common.Error(err) {
 					t.Fatal(err)
 				}
 
@@ -100,7 +100,7 @@ func TestBasicArchive(t *testing.T) {
 			}
 
 			v, err := fs.CurrentVersion(uid)
-			if err != nil {
+			if common.Error(err) {
 				t.Fatal(err)
 			}
 
@@ -115,18 +115,18 @@ func TestBasicArchive(t *testing.T) {
 
 func TestBasicIO(t *testing.T) {
 	path, err := common.CreateTempDir()
-	if err != nil {
+	if common.Error(err) {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(path)
 
 	fs, err := NewSha()
-	if err != nil {
+	if common.Error(err) {
 		t.Fatal(err)
 	}
 
 	v, err := NewShaVolume("test", path, false, false)
-	if err != nil {
+	if common.Error(err) {
 		t.Fatal(err)
 	}
 
@@ -135,19 +135,19 @@ func TestBasicIO(t *testing.T) {
 	s := "Hello world!"
 
 	suid, hs, err := fs.Store(NewShaUID(0, 0, PAGE+"."+strconv.Itoa(0)).String(), bytes.NewReader([]byte(s)), &Options{VolumeName: "test"})
-	if err != nil {
+	if common.Error(err) {
 		t.Fatal(err)
 	}
 
 	uid, err := ParseShaUID(suid)
-	if err != nil {
+	if common.Error(err) {
 		t.Fatal(err)
 	}
 
 	var w bytes.Buffer
 
 	_, hl, _, err := fs.Load(suid, &w, nil)
-	if err != nil {
+	if common.Error(err) {
 		t.Fatal(err)
 	}
 
@@ -155,7 +155,7 @@ func TestBasicIO(t *testing.T) {
 	assert.Equal(t, hs, hl, "Hash compare")
 
 	err = fs.Delete(suid, nil)
-	if err != nil {
+	if common.Error(err) {
 		t.Fatal(err)
 	}
 

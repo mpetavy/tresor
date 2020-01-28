@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"github.com/mpetavy/common"
 	"github.com/mpetavy/tresor/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"time"
@@ -15,7 +16,7 @@ func (db *MongoDB) SaveBucket(document *models.Bucket, options *Options) error {
 	}
 
 	b, err := bson.Marshal(document)
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
 

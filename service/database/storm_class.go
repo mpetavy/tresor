@@ -1,6 +1,7 @@
 package database
 
 import (
+	"github.com/mpetavy/common"
 	"time"
 
 	"github.com/mpetavy/tresor/models"
@@ -24,7 +25,7 @@ func (db *StormDB) DeleteClass(field string, value interface{}, id int, options 
 	class := &models.Class{}
 
 	err := db.LoadClass(field, value, class, options)
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
 

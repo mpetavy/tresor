@@ -16,7 +16,7 @@ func NewBadgerDB() (*BadgerDB, error) {
 
 func (db *BadgerDB) Init(cfg *common.Jason) error {
 	path, err := cfg.String("path")
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
 
@@ -31,6 +31,10 @@ func (db *BadgerDB) CreateSchema([]interface{}) error {
 
 func (db *BadgerDB) SwitchIndices(models []interface{}, enable bool) error {
 	return nil
+}
+
+func (db *BadgerDB) Query(rows interface{}, sql string) (string, error) {
+	return "", nil
 }
 
 func (db *BadgerDB) Start() error {

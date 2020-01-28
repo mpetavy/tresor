@@ -1,6 +1,7 @@
 package database
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/fatih/structs"
 	"github.com/go-pg/pg"
@@ -27,23 +28,23 @@ func (db *PgsqlDB) Init(cfg *common.Jason) error {
 	var err error
 
 	db.Username, err = cfg.String("username")
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
 	db.Password, err = cfg.String("password")
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
 	db.Host, err = cfg.String("host")
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
 	db.Port, err = cfg.Int("port")
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
 	db.Database, err = cfg.String("database")
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
 
@@ -53,12 +54,12 @@ func (db *PgsqlDB) Init(cfg *common.Jason) error {
 func (db *PgsqlDB) CreateSchema(models []interface{}) error {
 	for _, model := range models {
 		err := db.DB.DropTable(model, &orm.DropTableOptions{})
-		if err != nil {
+		if common.Error(err) {
 			common.Warn(err.Error())
 		}
 
 		err = db.DB.CreateTable(model, &orm.CreateTableOptions{})
-		if err != nil {
+		if common.Error(err) {
 			return err
 		}
 
@@ -79,7 +80,7 @@ func (db *PgsqlDB) CreateSchema(models []interface{}) error {
 				q := fmt.Sprintf("create index %s on %s %s", indexName, tableName, indexType)
 
 				_, err = db.DB.Exec(q)
-				if err != nil {
+				if common.Error(err) {
 					return err
 				}
 			}
@@ -95,20 +96,37 @@ func (db *PgsqlDB) SwitchIndices(models []interface{}, enable bool) error {
 
 		q := fmt.Sprintf("update pg_index set indisready=%v where indrelid=(select oid from pg_class where relname='%s')", enable, tableName)
 		_, err := db.DB.Exec(q)
-		if err != nil {
+		if common.Error(err) {
 			return err
 		}
 
 		if enable {
 			q := fmt.Sprintf("reindex table %s", tableName)
 			_, err := db.DB.Exec(q)
-			if err != nil {
+			if common.Error(err) {
 				return err
 			}
 		}
 	}
 
 	return nil
+}
+
+func (db *PgsqlDB) Query(rows interface{}, sql string) (string, error) {
+	r, err := db.DB.Query(rows, sql)
+	if common.Error(err) {
+		return "", err
+	}
+
+	common.Debug("rows affected: %d", r.RowsAffected())
+	common.Debug("rows returned: %d", r.RowsReturned())
+
+	ba, err := json.MarshalIndent(rows, "", "    ")
+	if common.Error(err) {
+		return "", err
+	}
+
+	return string(ba), nil
 }
 
 func (db *PgsqlDB) Start() error {
