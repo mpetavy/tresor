@@ -58,7 +58,7 @@ func processText(imageFile string) (string, error) {
 	cmd.Stderr = &stderr
 
 	err := common.Watchdog(cmd, time.Millisecond*time.Duration(*ocrScanTimeout))
-	if err != nil {
+	if common.Error(err) {
 		return "", err
 	}
 
@@ -75,7 +75,7 @@ func processOrientation(imageFile string) (Orientation, error) {
 	cmd.Stderr = &stderr
 
 	err := common.Watchdog(cmd, time.Millisecond*time.Duration(*ocrOrientationTimeout))
-	if err != nil {
+	if common.Error(err) {
 		return ORIENTATION_0, err
 	}
 
@@ -101,7 +101,7 @@ func processOrientation(imageFile string) (Orientation, error) {
 				line = strings.TrimSpace(line[p+len(tag):])
 
 				o, err = strconv.Atoi(line)
-				if err != nil {
+				if common.Error(err) {
 					return ORIENTATION_0, err
 				}
 
@@ -127,13 +127,13 @@ func processOrientation(imageFile string) (Orientation, error) {
 func Ocr(imageFile string) (string, Orientation, error) {
 	orientation, err := processOrientation(imageFile)
 
-	if err != nil {
+	if common.Error(err) {
 		common.Error(err)
 	}
 
 	if orientation != 0 {
 		tmpImage, err := LoadImage(imageFile)
-		if err != nil {
+		if common.Error(err) {
 			return "", -1, err
 		}
 
@@ -147,12 +147,12 @@ func Ocr(imageFile string) (string, Orientation, error) {
 		}
 
 		tmpFile, err := common.CreateTempFile()
-		if err != nil {
+		if common.Error(err) {
 			return "", -1, err
 		}
 
 		err = SaveJpeg(tmpImage, tmpFile.Name())
-		if err != nil {
+		if common.Error(err) {
 			return "", -1, err
 		}
 
@@ -161,7 +161,7 @@ func Ocr(imageFile string) (string, Orientation, error) {
 
 	txt, err := processText(imageFile)
 
-	if err != nil {
+	if common.Error(err) {
 		return "", -1, err
 	}
 

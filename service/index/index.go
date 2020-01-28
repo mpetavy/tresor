@@ -41,7 +41,7 @@ func Init(name string, cfg *common.Jason, router *mux.Router) error {
 	pool := make(chan Index, 10)
 	for i := 0; i < 10; i++ {
 		index, err := create(cfg)
-		if err != nil {
+		if common.Error(err) {
 			common.Fatal(err)
 		}
 
@@ -57,7 +57,7 @@ func Init(name string, cfg *common.Jason, router *mux.Router) error {
 		//defer Put(name, index)
 		//
 		//_, _, err := (*index).Load(v["uid"], rw, nil)
-		//if err != nil {
+		//if common.Error(err) {
 		//	common.Error(err)
 		//
 		//	return
@@ -103,7 +103,7 @@ func Exec(name string, fn func(index Index) error) error {
 
 func create(cfg *common.Jason) (Index, error) {
 	driver, err := cfg.String("driver")
-	if err != nil {
+	if common.Error(err) {
 		return nil, err
 	}
 
@@ -112,7 +112,7 @@ func create(cfg *common.Jason) (Index, error) {
 	switch driver {
 	case DEFAULT_INDEXER:
 		index, err = NewDefaultIndexer()
-		if err != nil {
+		if common.Error(err) {
 			return nil, err
 		}
 	default:
@@ -120,12 +120,12 @@ func create(cfg *common.Jason) (Index, error) {
 	}
 
 	err = index.Init(cfg)
-	if err != nil {
+	if common.Error(err) {
 		return nil, err
 	}
 
 	err = index.Start()
-	if err != nil {
+	if common.Error(err) {
 		return nil, err
 	}
 

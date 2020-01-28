@@ -17,7 +17,7 @@ func CreateHierarchicalPath(flat bool, id int) (string, error) {
 		for i := 3; i >= 0; i-- {
 			if i < 3 {
 				_, err := sb.WriteString(string(filepath.Separator))
-				if err != nil {
+				if common.Error(err) {
 					return "", err
 				}
 			}
@@ -28,7 +28,7 @@ func CreateHierarchicalPath(flat bool, id int) (string, error) {
 			vs := fmt.Sprintf("%012d", v)
 
 			_, err := sb.WriteString(vs)
-			if err != nil {
+			if common.Error(err) {
 				return "", err
 			}
 		}

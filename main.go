@@ -40,7 +40,7 @@ func start() error {
 	http.Handle("/", router)
 
 	err := service.InitServices(router)
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
 
@@ -66,7 +66,7 @@ func start() error {
 
 func stop() error {
 	err := service.StopServices()
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
 
@@ -74,7 +74,7 @@ func stop() error {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
 		err := server.Shutdown(ctx)
-		if err != nil {
+		if common.Error(err) {
 			return err
 		}
 	}

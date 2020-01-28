@@ -1,6 +1,7 @@
 package database
 
 import (
+	"github.com/mpetavy/common"
 	"time"
 
 	"github.com/mpetavy/tresor/models"
@@ -24,7 +25,7 @@ func (db *StormDB) DeleteBucket(field string, value interface{}, id int, options
 	document := &models.Bucket{}
 
 	err := db.LoadBucket(field, value, document, options)
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
 

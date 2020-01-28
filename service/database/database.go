@@ -1,9 +1,13 @@
 package database
 
 import (
+	"github.com/gorilla/mux"
 	"github.com/mpetavy/common"
+	"github.com/mpetavy/tresor/cache"
 	"github.com/mpetavy/tresor/models"
 	"github.com/mpetavy/tresor/service/errors"
+	"net/http"
+	"net/url"
 )
 
 //go:generate
@@ -14,6 +18,8 @@ const (
 	TYPE_BADGER = "badger"
 	TYPE_MONGO  = "mongo"
 	TYPE_PGSQL  = "pgsql"
+
+	QUERY = "query"
 )
 
 type Options struct {
@@ -26,6 +32,7 @@ type Database interface {
 
 	CreateSchema([]interface{}) error
 	SwitchIndices(models []interface{}, enable bool) error
+	Query(rows interface{}, sql string) (string, error)
 
 	SaveBucket(doc *models.Bucket, options *Options) error
 	LoadBucket(field string, value interface{}, doc *models.Bucket, options *Options) error
@@ -47,12 +54,12 @@ func init() {
 	instances = make(map[string]instance)
 }
 
-func Init(name string, cfg *common.Jason) error {
+func Init(name string, cfg *common.Jason, router *mux.Router) error {
 	pool := make(chan Database, 10)
 	for i := 0; i < 10; i++ {
 		db, err := create(cfg)
-		if err != nil {
-			common.Fatal(err)
+		if common.Fatal(err) {
+			return err
 		}
 
 		pool <- db
@@ -62,12 +69,68 @@ func Init(name string, cfg *common.Jason) error {
 
 	instances[name] = instance{cfg, pool}
 
-	common.Info("Create Schema %s", name)
+	router.PathPrefix("/"+name).Subrouter().HandleFunc("/{sql}", func(rw http.ResponseWriter, r *http.Request) {
+		v := mux.Vars(r)
 
-	db := Get(name)
-	defer Put(name, db)
+		sql, err := url.QueryUnescape(v["sql"])
+		if common.Error(err) {
+			return
+		}
 
-	return db.CreateSchema([]interface{}{&models.User{}, &models.Bucket{}})
+		var ba []byte
+
+		c, ok := cache.Get(QUERY, sql)
+
+		if ok {
+			ba = c.([]byte)
+		}
+
+		force := common.ToBool(r.URL.Query().Get("force"))
+
+		if force || ba == nil {
+			common.Debug(sql)
+
+			common.Error(Exec(name, func(db Database) error {
+				var rows []models.Bucket
+
+				result, err := db.Query(&rows, sql)
+				if common.Error(err) {
+					return err
+				}
+
+				ba = []byte(result)
+
+				cache.Put(QUERY, sql, ba)
+
+				return nil
+			}))
+		}
+
+		//rw.Header().Add("Content-type", "application/json")
+		rw.Write(ba)
+
+		return
+	})
+
+	rebuild, err := cfg.Bool("rebuild")
+	if common.Error(err) {
+		return err
+	}
+
+	if rebuild {
+		common.Info("Create Schema %s", name)
+
+		common.Error(Exec(name, func(db Database) error {
+			err := db.CreateSchema([]interface{}{&models.User{}, &models.Bucket{}})
+			if common.Error(err) {
+				return err
+			}
+
+			return nil
+		}))
+	}
+
+	return nil
 }
 
 func Close() {
@@ -104,7 +167,7 @@ func Exec(name string, fn func(db Database) error) error {
 
 func create(cfg *common.Jason) (Database, error) {
 	driver, err := cfg.String("driver")
-	if err != nil {
+	if common.Error(err) {
 		return nil, err
 	}
 
@@ -123,17 +186,17 @@ func create(cfg *common.Jason) (Database, error) {
 		return nil, &errors.ErrUnknownDriver{driver}
 	}
 
-	if err != nil {
+	if common.Error(err) {
 		return nil, err
 	}
 
 	err = db.Init(cfg)
-	if err != nil {
+	if common.Error(err) {
 		return nil, err
 	}
 
 	err = db.Start()
-	if err != nil {
+	if common.Error(err) {
 		return nil, err
 	}
 

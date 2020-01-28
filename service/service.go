@@ -16,23 +16,25 @@ import (
 
 func InitServices(router *mux.Router) error {
 	cwd, err := os.Getwd()
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
 
 	f, err := os.Open(filepath.Join(cwd, "tresor.json"))
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
-	defer f.Close()
+	defer func() {
+		common.Error(f.Close())
+	}()
 
 	b, err := ioutil.ReadAll(f)
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
 
 	serverCfg, err := common.NewJason(string(b))
-	if err != nil {
+	if common.Error(err) {
 		return err
 	}
 
@@ -42,33 +44,33 @@ func InitServices(router *mux.Router) error {
 
 	for i := 0; i < serverCfg.ArrayCount("services"); i++ {
 		serviceCfg, err := serverCfg.Array("services", i)
-		if err != nil {
+		if common.Error(err) {
 			return err
 		}
 
 		serviceName, err := serviceCfg.String("name")
-		if err != nil {
+		if common.Error(err) {
 			return err
 		}
 		serviceType, err := serviceCfg.String("type")
-		if err != nil {
+		if common.Error(err) {
 			return err
 		}
 
 		switch serviceType {
 		case storage.TYPE:
 			err := storage.Init(serviceName, serviceCfg, router)
-			if err != nil {
+			if common.Error(err) {
 				return err
 			}
 		case database.TYPE:
-			err := database.Init(serviceName, serviceCfg)
-			if err != nil {
+			err := database.Init(serviceName, serviceCfg, router)
+			if common.Error(err) {
 				return err
 			}
 		case index.TYPE:
 			err := index.Init(serviceName, serviceCfg, router)
-			if err != nil {
+			if common.Error(err) {
 				return err
 			}
 		default:
