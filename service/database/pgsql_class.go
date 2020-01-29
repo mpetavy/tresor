@@ -12,7 +12,7 @@ func (db *PgsqlDB) SaveClass(class *models.Class, options *Options) error {
 		class.ModifiedAt = time.Now()
 	}
 
-	return db.DB.Insert(class)
+	return db.ORM.Insert(class)
 }
 
 func (db *PgsqlDB) LoadClass(field string, value interface{}, class *models.Class, options *Options) error {

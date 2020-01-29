@@ -32,7 +32,7 @@ type Database interface {
 
 	CreateSchema([]interface{}) error
 	SwitchIndices(models []interface{}, enable bool) error
-	Query(rows interface{}, sql string) (string, error)
+	SQL(sql string) (string, error)
 
 	SaveBucket(doc *models.Bucket, options *Options) error
 	LoadBucket(field string, value interface{}, doc *models.Bucket, options *Options) error
@@ -91,9 +91,7 @@ func Init(name string, cfg *common.Jason, router *mux.Router) error {
 			common.Debug(sql)
 
 			common.Error(Exec(name, func(db Database) error {
-				var rows []models.Bucket
-
-				result, err := db.Query(&rows, sql)
+				result, err := db.SQL(sql)
 				if common.Error(err) {
 					return err
 				}

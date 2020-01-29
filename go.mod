@@ -17,6 +17,7 @@ require (
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/gorilla/mux v1.7.2
 	github.com/jinzhu/inflection v0.0.0-20180308033659-04140366298a // indirect
+	github.com/lib/pq v1.3.0
 	github.com/mpetavy/common v1.1.18
 	github.com/mpetavy/go-dicom v0.0.0-20190425222315-e8a3a6a3f629
 	github.com/onsi/ginkgo v1.8.0 // indirect

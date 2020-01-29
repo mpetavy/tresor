@@ -12,7 +12,7 @@ func (db *PgsqlDB) SaveBucket(document *models.Bucket, options *Options) error {
 		document.ModifiedAt = time.Now()
 	}
 
-	return db.DB.Insert(document)
+	return db.ORM.Insert(document)
 }
 
 func (db *PgsqlDB) LoadBucket(field string, value interface{}, document *models.Bucket, options *Options) error {
