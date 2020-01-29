@@ -53,7 +53,7 @@ func (db *MongoDB) SwitchIndices(models []interface{}, enable bool) error {
 	return nil
 }
 
-func (db *MongoDB) Query(rows interface{}, sql string) (string, error) {
+func (db *MongoDB) SQL(sql string) (string, error) {
 	return "", nil
 }
 

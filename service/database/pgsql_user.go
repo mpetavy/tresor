@@ -12,7 +12,7 @@ func (db *PgsqlDB) SaveUser(user *models.User, options *Options) error {
 		user.ModifiedAt = time.Now()
 	}
 
-	return db.DB.Insert(user)
+	return db.ORM.Insert(user)
 }
 
 func (db *PgsqlDB) LoadUser(field string, value interface{}, user *models.User, options *Options) error {

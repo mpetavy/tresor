@@ -33,7 +33,7 @@ func (db *BadgerDB) SwitchIndices(models []interface{}, enable bool) error {
 	return nil
 }
 
-func (db *BadgerDB) Query(rows interface{}, sql string) (string, error) {
+func (db *BadgerDB) SQL(sql string) (string, error) {
 	return "", nil
 }
 

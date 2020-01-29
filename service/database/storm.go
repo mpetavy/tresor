@@ -33,7 +33,7 @@ func (db *StormDB) SwitchIndices(models []interface{}, enable bool) error {
 	return nil
 }
 
-func (db *StormDB) Query(rows interface{}, sql string) (string, error) {
+func (db *StormDB) SQL(sql string) (string, error) {
 	return "", nil
 }
 

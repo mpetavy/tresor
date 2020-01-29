@@ -1,11 +1,13 @@
 package database
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"github.com/fatih/structs"
 	"github.com/go-pg/pg"
 	"github.com/go-pg/pg/orm"
+	_ "github.com/lib/pq"
 	"github.com/mpetavy/common"
 	"reflect"
 	"strings"
@@ -17,7 +19,8 @@ type PgsqlDB struct {
 	Host     string
 	Port     int
 	Database string
-	DB       *pg.DB
+	ORM      *pg.DB
+	DB       *sql.DB
 }
 
 func NewPgsqlDB() (*PgsqlDB, error) {
@@ -48,17 +51,29 @@ func (db *PgsqlDB) Init(cfg *common.Jason) error {
 		return err
 	}
 
+	connStr := fmt.Sprintf("user='%s' password='%s' host='%s' port='%d' dbname='%s' sslmode='disable'",
+		db.Username,
+		db.Password,
+		db.Host,
+		db.Port,
+		db.Database)
+
+	db.DB, err = sql.Open("postgres", connStr)
+	if common.Error(err) {
+		return err
+	}
+
 	return nil
 }
 
 func (db *PgsqlDB) CreateSchema(models []interface{}) error {
 	for _, model := range models {
-		err := db.DB.DropTable(model, &orm.DropTableOptions{})
+		err := db.ORM.DropTable(model, &orm.DropTableOptions{})
 		if common.Error(err) {
 			common.Warn(err.Error())
 		}
 
-		err = db.DB.CreateTable(model, &orm.CreateTableOptions{})
+		err = db.ORM.CreateTable(model, &orm.CreateTableOptions{})
 		if common.Error(err) {
 			return err
 		}
@@ -79,7 +94,7 @@ func (db *PgsqlDB) CreateSchema(models []interface{}) error {
 
 				q := fmt.Sprintf("create index %s on %s %s", indexName, tableName, indexType)
 
-				_, err = db.DB.Exec(q)
+				_, err = db.ORM.Exec(q)
 				if common.Error(err) {
 					return err
 				}
@@ -95,14 +110,14 @@ func (db *PgsqlDB) SwitchIndices(models []interface{}, enable bool) error {
 		tableName := structs.Name(model) + "s"
 
 		q := fmt.Sprintf("update pg_index set indisready=%v where indrelid=(select oid from pg_class where relname='%s')", enable, tableName)
-		_, err := db.DB.Exec(q)
+		_, err := db.ORM.Exec(q)
 		if common.Error(err) {
 			return err
 		}
 
 		if enable {
 			q := fmt.Sprintf("reindex table %s", tableName)
-			_, err := db.DB.Exec(q)
+			_, err := db.ORM.Exec(q)
 			if common.Error(err) {
 				return err
 			}
@@ -112,16 +127,39 @@ func (db *PgsqlDB) SwitchIndices(models []interface{}, enable bool) error {
 	return nil
 }
 
-func (db *PgsqlDB) Query(rows interface{}, sql string) (string, error) {
-	r, err := db.DB.Query(rows, sql)
-	if common.Error(err) {
+func (db *PgsqlDB) SQL(query string) (string, error) {
+	var objects []map[string]interface{}
+
+	rows, err := db.DB.Query(query)
+	if err != nil {
 		return "", err
 	}
+	defer func() {
+		common.Error(rows.Close())
+	}()
 
-	common.Debug("rows affected: %d", r.RowsAffected())
-	common.Debug("rows returned: %d", r.RowsReturned())
+	for rows.Next() {
+		columns, err := rows.ColumnTypes()
+		if err != nil {
+			return "", err
+		}
 
-	ba, err := json.MarshalIndent(rows, "", "    ")
+		values := make([]interface{}, len(columns))
+		object := map[string]interface{}{}
+		for i, column := range columns {
+			object[column.Name()] = reflect.New(column.ScanType()).Interface()
+			values[i] = object[column.Name()]
+		}
+
+		err = rows.Scan(values...)
+		if err != nil {
+			return "", err
+		}
+
+		objects = append(objects, object)
+	}
+
+	ba, err := json.MarshalIndent(objects, "", "    ")
 	if common.Error(err) {
 		return "", err
 	}
@@ -130,7 +168,7 @@ func (db *PgsqlDB) Query(rows interface{}, sql string) (string, error) {
 }
 
 func (db *PgsqlDB) Start() error {
-	db.DB = pg.Connect(&pg.Options{
+	db.ORM = pg.Connect(&pg.Options{
 		User:     db.Username,
 		Password: db.Password,
 		Addr:     fmt.Sprintf("%s:%d", db.Host, db.Port),
@@ -141,8 +179,12 @@ func (db *PgsqlDB) Start() error {
 }
 
 func (db *PgsqlDB) Stop() error {
+	if db.ORM != nil {
+		common.Error(db.ORM.Close())
+	}
+
 	if db.DB != nil {
-		return db.DB.Close()
+		common.Error(db.DB.Close())
 	}
 
 	return nil
