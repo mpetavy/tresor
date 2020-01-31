@@ -42,6 +42,28 @@
     display: inline-block;
     background-size: 35px;
   }
+  .doc-card img {
+    cursor: pointer;
+  }
+  .doc-detail-over {
+    background-color: white; 
+    opacity: 0.85;
+    width: 100%;
+    height: 100vh;
+    position: absolute;
+    top: 0; 
+    left: 0;
+    z-index: 100;
+  }
+  .doc-detail {
+    padding:30px; 
+    text-align: center;
+    width: 100%;
+    position: absolute;
+    top: 0; 
+    left: 0;
+    z-index: 101;
+  }
   </style>
 </head>
 <body>
@@ -52,13 +74,29 @@ const tDocument = d => html`
   <div class="col-sm-3 p-3">
     <div class="card">
       <h5 class="card-header">${d.sopinstanceuid}</h5>
-      <div class="card-body">
+      <div class="card-body doc-card">
         <p>Number of frames: ${d.numberofframes}</p>
-        <img src="/storage-pixeldata/${encodeURIComponent(d.uid)}" width="290" />
+        <img src="/storage-pixeldata/${encodeURIComponent(d.uid)}" @click=${documentDetailHandler(d.uid)} width="290" />
       </div>
     </div>
   </div>
 `;
+
+const tDocumentDetail = d => html`
+  <div class="doc-detail" @dblclick=${render(html``, extraContent)}>
+    <p><img src="/storage-pixeldata/${encodeURIComponent(d.uid)}" @click=${documentDetailHandler(d.uid)} max-width="800" /></p>
+    <p>DOCUMENT DETAIL</p>
+  </div>
+  <div class="doc-detail-over"></div>
+`;
+
+const documentDetailHandler = uid => ({
+  handleEvent() {     
+    patientService.documentDetail(uid)
+    .then(d => { console.log('DOCUMENT', d); return d; })
+    .then(d => render(tDocumentDetail(d), extraContent));
+  }
+});
 
 const tPatientDetail = (p, docs) => html`  
   <div style="float:right">
@@ -128,6 +166,7 @@ const searchHandler = () => ({
 });
 
 const pageContent = document.getElementById('page');
+const extraContent = document.getElementById('extra');
 
 function PatientService() {
   const cleanData = patients => patients
@@ -143,10 +182,16 @@ function PatientService() {
   const findByName = key => findAll()
                       .then(list => list.filter(({name}) => name.toUpperCase().includes(key.toUpperCase())));
   
-  const findDocuments = id => fetch('/db/' + encodeURIComponent(`select distinct uid, prop->'SOPInstanceUID' as sopInstanceUID, coalesce(prop->'NumberOfFrames', '0') as numberOfFrames from buckets where prop->'PatientID' = '${id}'`) +'?force=true')
+  const findDocuments = pid => fetch('/db/' + encodeURIComponent(`select distinct uid, prop->'SOPInstanceUID' as sopInstanceUID, coalesce(prop->'NumberOfFrames', '0') as numberOfFrames from buckets where prop->'PatientID' = '${pid}'`) +'?force=true')
                       .then(response => response.json()); 
+                      
+  //const documentDetail = uid => fetch('/db/' + encodeURIComponent(`select distinct prop->'StudyID' as StudyID from buckets where uid = '${uid}'`) +'?force=true')                      
+  //const documentDetail = uid => fetch('/db/' + encodeURIComponent(`select * from buckets where uid = '${uid}'`) +'?force=true')
+  //                    .then(response => response.json()); 
   
-  return { findAll, findByName, findDocuments };
+  const documentDetail = uid => Promise.resolve({uid});
+  
+  return { findAll, findByName, findDocuments, documentDetail };
 }
 
 const patientService = new PatientService();
@@ -156,4 +201,5 @@ patientService.findAll().then(list => render(tPatientList(list), pageContent));
 <div id="page" class="p-5">
   Page is loading...
 </div>
+<div id="extra"></div>
 </body>
