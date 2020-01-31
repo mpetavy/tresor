@@ -7,6 +7,7 @@ require (
 	github.com/DataDog/zstd v1.4.0 // indirect
 	github.com/Sereal/Sereal v0.0.0-20190618215532-0b8ac451a863 // indirect
 	github.com/asdine/storm v2.1.2+incompatible
+	github.com/chai2010/tiff v0.0.0-20170224011043-1e1a564e3705
 	github.com/dgraph-io/badger v1.5.4
 	github.com/dgryski/go-farm v0.0.0-20190423205320-6a90982ecee2 // indirect
 	github.com/disintegration/imaging v1.6.1

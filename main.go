@@ -71,7 +71,7 @@ func stop() error {
 	}
 
 	if server != nil {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 		defer cancel()
 		err := server.Shutdown(ctx)
 		if common.Error(err) {
