@@ -53,7 +53,7 @@ func start() error {
 	}
 
 	pathPrefix := "/static/"
-	router.PathPrefix(pathPrefix).Handler(http.StripPrefix(pathPrefix, http.FileServer(http.Dir("./"))))
+	router.PathPrefix(pathPrefix).Handler(http.StripPrefix(pathPrefix, http.FileServer(http.Dir("./static"))))
 
 	go func(err *error) {
 		*err = server.ListenAndServe()
