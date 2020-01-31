@@ -75,7 +75,7 @@ func Init(name string, cfg *common.Jason, router *mux.Router) error {
 		}))
 	})
 
-	router.PathPrefix("/"+name+"/pixeldata").Subrouter().HandleFunc("/{uid:[0-9a-zA-Z\\/.]*}", func(rw http.ResponseWriter, r *http.Request) {
+	router.PathPrefix("/"+name+"-pixeldata").Subrouter().HandleFunc("/{uid:[0-9a-zA-Z\\/.]*}", func(rw http.ResponseWriter, r *http.Request) {
 		v := mux.Vars(r)
 
 		common.Error(Exec(name, func(storage Storage) error {
