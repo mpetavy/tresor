@@ -1,0 +1,159 @@
+<html>
+<head>
+  <title>FORUM WebViewer</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <style>
+  .card a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .card.card-link:hover {
+    border-color: #999;
+  }
+  .gender {
+    float: right
+  }
+  .birthdate, .idcard, .gender {
+    background-size: 20px;
+    background-repeat: no-repeat;
+    padding-left: 30px;
+  }
+  .birthdate {
+    background-image: url('birthsday.png');
+  }
+  .idcard {
+    background-image: url('idcard.png');
+  }
+  .gender {
+    background-position: right;   
+    height: 20px;
+  }
+  .gender-M {
+    background-image: url('M.jpg');
+  }
+  .gender-F {
+    background-image: url('F.jpg');
+  }
+  h1.gender {
+    float: none;
+    padding-left: 0;
+    padding-right: 50px;
+    height: inherit;
+    display: inline-block;
+    background-size: 35px;
+  }
+  </style>
+</head>
+<body>
+<script type="module">
+import {html, render} from 'https://unpkg.com/lit-html?module';  
+
+const tDocument = d => html`
+  <div class="col-sm-3 p-3">
+    <div class="card">
+      <h5 class="card-header">${d.sopinstanceuid}</h5>
+      <div class="card-body">
+        <p>Number of frames: ${d.numberofframes}</p>
+        <img src="/storage-pixeldata/${encodeURIComponent(d.uid)}" width="290" />
+      </div>
+    </div>
+  </div>
+`;
+
+const tPatientDetail = (p, docs) => html`  
+  <div style="float:right">
+    <a href="#" @click=${backHandler()}><img src="back.png" width="70" /></a>
+  </div>
+  <h1 class="gender gender-${p.gender}">${p.name}</h1>
+  <div style="width: 20rem" class="pb-4">
+    <div class="idcard font-weight-bold">${p.id}</div>
+    <div class="birthdate">${p.birthdate}</div>        
+  </div>  
+  <h2 class="text-secondary">Documents</h2>
+  ${docs && docs.length
+    ? html`
+      <div class="row">
+        ${docs.map(tDocument)}
+      </div>`
+    : html`<p>No documents</p>`
+  }
+`;
+
+const backHandler = () => ({
+  handleEvent() {     
+    patientService.findAll().then(list => render(tPatientList(list), pageContent));
+  }
+});
+
+const tPatientCard = p => html`  
+  <div class="col-sm-3 p-2">
+    <div class="card card-link bg-light">
+      <h5 class="card-header">
+        <a href="#" class="stretched-link" @click=${openPatientHandler(p)}>${p.name}</a>
+      </h5>
+      <div class="card-body">
+        <div class="idcard font-weight-bold">${p.id}</div>
+        <div class="gender gender-${p.gender}"></div>
+        <div class="birthdate">${p.birthdate}</div>        
+      </div>
+    </div>
+  </div>
+`;
+
+const openPatientHandler = p => ({
+  handleEvent() {     
+    patientService.findDocuments(p.id).then(docs => render(tPatientDetail(p, docs), pageContent));
+  }
+});
+
+const tPatientList = pList => html`
+  <h1>Patients</h1>
+  <form action="#" class="form-inline">
+    <div class="form-group mb-2 pr-2">
+      <label for="search.key" class="pr-3">ID / Name</label>
+      <input name="key" id="search.key" class="form-control input-lg" />
+    </div>
+    <button type="button" @click=${searchHandler()} class="btn btn-primary mb-2">Search</button>
+  </form>
+  <div class="row">
+    ${pList.map(tPatientCard)}
+  </div>
+`;
+
+const searchHandler = () => ({
+  handleEvent() { 
+    const key = document.getElementById('search.key').value + "";
+    patientService.findByName(key).then(list => render(tPatientList(list), pageContent));
+  }
+});
+
+const pageContent = document.getElementById('page');
+
+function PatientService() {
+  const cleanData = patients => patients
+                      .map(p => ({...p, 
+                                  gender: p.gender != 'M' ? 'F' : 'M', 
+                                  birthdate: new Date(parseInt(p.birthdate) + 1000).toDateString()
+                                 }));
+  
+  const findAll = () => fetch('/db/' + encodeURIComponent(`select distinct prop->'PatientID' as id, coalesce(prop->'PatientSex','X') as gender, prop->'PatientName' as name, prop->'PatientBirthDate' as birthdate from buckets`) +'?force=true')
+                      .then(response => response.json())
+                      .then(cleanData);  
+                      
+  const findByName = key => findAll()
+                      .then(list => list.filter(({name}) => name.toUpperCase().includes(key.toUpperCase())));
+  
+  const findDocuments = id => fetch('/db/' + encodeURIComponent(`select distinct uid, prop->'SOPInstanceUID' as sopInstanceUID, coalesce(prop->'NumberOfFrames', '0') as numberOfFrames from buckets where prop->'PatientID' = '${id}'`) +'?force=true')
+                      .then(response => response.json()); 
+  
+  return { findAll, findByName, findDocuments };
+}
+
+const patientService = new PatientService();
+
+patientService.findAll().then(list => render(tPatientList(list), pageContent));
+</script>
+<div id="page" class="p-5">
+  Page is loading...
+</div>
+</body>
