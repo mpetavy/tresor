@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os/exec"
 	"path/filepath"
 	"strconv"
@@ -132,7 +133,12 @@ func Ocr(imageFile string) (string, Orientation, error) {
 	}
 
 	if orientation != 0 {
-		tmpImage, err := LoadImage(imageFile)
+		ba, err := ioutil.ReadFile(imageFile)
+		if common.Error(err) {
+			return "", -1, err
+		}
+
+		tmpImage, err := LoadImage(ba)
 		if common.Error(err) {
 			return "", -1, err
 		}

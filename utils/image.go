@@ -1,9 +1,11 @@
 package utils
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
-	"golang.org/x/image/tiff"
+	chaiTiff "github.com/chai2010/tiff"
+	defaultTiff "golang.org/x/image/tiff"
 	"image"
 	"image/draw"
 	"io"
@@ -38,30 +40,26 @@ func init() {
 	quality = flag.Int("jpeg.quality", 80, "JPEG quality")
 }
 
-func LoadImage(path string) (img image.Image, err error) {
+func LoadImage(ba []byte) (img image.Image, err error) {
 	defer func() {
 		if err := recover(); err != nil {
 			img = nil
-			err = fmt.Errorf("LoadImage failed: %s", path)
+			err = fmt.Errorf("LoadImage failed")
 		}
 	}()
 
-	img, err = imaging.Open(path)
+	img, err = imaging.Decode(bytes.NewReader(ba))
 
 	if err == nil {
 		return img, nil
 	}
 
-	f, err := os.Open(path)
+	img, err = defaultTiff.Decode(bytes.NewReader(ba))
 	if common.Error(err) {
 		return nil, err
 	}
 
-	defer func() {
-		common.Ignore(f.Close())
-	}()
-
-	img, err = tiff.Decode(f)
+	img, err = chaiTiff.Decode(bytes.NewReader(ba))
 	if common.Error(err) {
 		return nil, err
 	}

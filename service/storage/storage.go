@@ -1,9 +1,16 @@
 package storage
 
 import (
+	"bytes"
 	"container/list"
+	"fmt"
+	"github.com/mpetavy/go-dicom"
+	"github.com/mpetavy/go-dicom/dicomtag"
+	"github.com/mpetavy/tresor/utils"
+	"image/jpeg"
 	"io"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -55,13 +62,82 @@ func Init(name string, cfg *common.Jason, router *mux.Router) error {
 
 	instances[name] = instance{cfg, pool}
 
-	router.PathPrefix("/"+name).Subrouter().HandleFunc("/{uid}", func(rw http.ResponseWriter, r *http.Request) {
+	router.PathPrefix("/"+name).Subrouter().HandleFunc("/{uid:[0-9a-zA-Z\\/.]*}", func(rw http.ResponseWriter, r *http.Request) {
 		v := mux.Vars(r)
 
 		common.Error(Exec(name, func(storage Storage) error {
 			_, _, _, err := storage.Load(v["uid"], rw, nil)
 			if common.Error(err) {
 				return err
+			}
+
+			return nil
+		}))
+	})
+
+	router.PathPrefix("/"+name+"/pixeldata").Subrouter().HandleFunc("/{uid:[0-9a-zA-Z\\/.]*}", func(rw http.ResponseWriter, r *http.Request) {
+		v := mux.Vars(r)
+
+		common.Error(Exec(name, func(storage Storage) error {
+			var ba []byte
+			var buf bytes.Buffer
+
+			_, _, _, err := storage.Load(v["uid"], &buf, nil)
+			//_, _, _, err := storage.Load("8/29/1.2.276.0.75.2.5.30.20.3.80829163102431.26107108215232.583744530.dcm", &buf, nil)
+			if common.Error(err) {
+				return err
+			}
+
+			ba = buf.Bytes()
+
+			mimeType := common.DetectMimeType("", ba).MimeType
+
+			if mimeType == common.MimetypeApplicationDicom.MimeType {
+				dcm, err := dicom.ReadDataSetInBytes(buf.Bytes(), dicom.ReadOptions{DropPixelData: false})
+				if common.Error(err) {
+					return err
+				}
+
+				for _, elem := range dcm.Elements {
+					if elem.Tag == dicomtag.PixelData {
+						data := elem.Value[0].(dicom.PixelDataInfo)
+						ba = data.Frames[0]
+
+						mimeType = common.DetectMimeType("", ba).MimeType
+
+						break
+					}
+				}
+			}
+
+			if ba == nil {
+				return fmt.Errorf("cannot handle content with mimeType %s", mimeType)
+			}
+
+			if common.IsImageMimeType(mimeType) {
+				if mimeType != common.MimetypeImageJpeg.MimeType {
+					img, err := utils.LoadImage(ba)
+					if common.Error(err) {
+						return err
+					}
+
+					if mimeType != common.MimetypeImageJpeg.MimeType {
+						err = jpeg.Encode(&buf, img, &jpeg.Options{80})
+						if common.Error(err) {
+							return err
+						}
+
+						ba = buf.Bytes()
+					}
+				}
+
+				rw.Header().Add("Content-type", common.MimetypeImageJpeg.MimeType)
+				rw.Header().Add("Content-length", strconv.Itoa(len(ba)))
+
+				_, err = io.Copy(rw, bytes.NewReader(ba))
+				if common.Error(err) {
+					return err
+				}
 			}
 
 			return nil
