@@ -7,7 +7,6 @@ import (
 	"github.com/mpetavy/tresor/models"
 	"github.com/mpetavy/tresor/service/errors"
 	"net/http"
-	"net/url"
 )
 
 //go:generate
@@ -69,13 +68,8 @@ func Init(name string, cfg *common.Jason, router *mux.Router) error {
 
 	instances[name] = instance{cfg, pool}
 
-	router.PathPrefix("/"+name).Subrouter().HandleFunc("/{sql}", func(rw http.ResponseWriter, r *http.Request) {
-		v := mux.Vars(r)
-
-		sql, err := url.QueryUnescape(v["sql"])
-		if common.Error(err) {
-			return
-		}
+	router.PathPrefix("/" + name + "/").Handler(http.StripPrefix("/"+name+"/", http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		sql := r.URL.Path
 
 		var ba []byte
 
@@ -108,7 +102,7 @@ func Init(name string, cfg *common.Jason, router *mux.Router) error {
 		rw.Write(ba)
 
 		return
-	})
+	})))
 
 	rebuild, err := cfg.Bool("rebuild")
 	if common.Error(err) {

@@ -62,28 +62,27 @@ func Init(name string, cfg *common.Jason, router *mux.Router) error {
 
 	instances[name] = instance{cfg, pool}
 
-	router.PathPrefix("/"+name).Subrouter().HandleFunc("/{uid:[0-9a-zA-Z\\/.]*}", func(rw http.ResponseWriter, r *http.Request) {
-		v := mux.Vars(r)
+	router.PathPrefix("/" + name + "/").Handler(http.StripPrefix("/"+name+"/", http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		uid := r.URL.Path
 
 		common.Error(Exec(name, func(storage Storage) error {
-			_, _, _, err := storage.Load(v["uid"], rw, nil)
+			_, _, _, err := storage.Load(uid, rw, nil)
 			if common.Error(err) {
 				return err
 			}
 
 			return nil
 		}))
-	})
+	})))
 
-	router.PathPrefix("/"+name+"-pixeldata").Subrouter().HandleFunc("/{uid:[0-9a-zA-Z\\/.]*}", func(rw http.ResponseWriter, r *http.Request) {
-		v := mux.Vars(r)
+	router.PathPrefix("/" + name + "-pixeldata/").Handler(http.StripPrefix("/"+name+"-pixeldata/", http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		uid := r.URL.Path
 
 		common.Error(Exec(name, func(storage Storage) error {
 			var ba []byte
 			var buf bytes.Buffer
 
-			_, _, _, err := storage.Load(v["uid"], &buf, nil)
-			//_, _, _, err := storage.Load("8/29/1.2.276.0.75.2.5.30.20.3.80829163102431.26107108215232.583744530.dcm", &buf, nil)
+			_, _, _, err := storage.Load(uid, &buf, nil)
 			if common.Error(err) {
 				return err
 			}
@@ -142,7 +141,7 @@ func Init(name string, cfg *common.Jason, router *mux.Router) error {
 
 			return nil
 		}))
-	})
+	})))
 
 	common.Info("Registered storage '%s'", name)
 
