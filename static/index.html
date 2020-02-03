@@ -64,6 +64,11 @@
     left: 0;
     z-index: 101;
   }
+  table.center {
+    margin-left:auto; 
+    margin-right:auto;
+    width:50%;
+  }
   </style>
 </head>
 <body>
@@ -75,7 +80,6 @@ const tDocument = d => html`
     <div class="card">
       <h5 class="card-header">${d.sopinstanceuid}</h5>
       <div class="card-body doc-card">
-        <p>Number of frames: ${d.numberofframes}</p>
         <img src="/storage-pixeldata/${encodeURIComponent(d.uid)}" @click=${documentDetailHandler(d.uid)} width="290" />
       </div>
     </div>
@@ -83,9 +87,12 @@ const tDocument = d => html`
 `;
 
 const tDocumentDetail = d => html`
-  <div class="doc-detail" @dblclick=${render(html``, extraContent)}>
+  <div class="doc-detail">
     <p><img src="/storage-pixeldata/${encodeURIComponent(d.uid)}" @click=${documentDetailHandler(d.uid)} max-width="800" /></p>
-    <p>DOCUMENT DETAIL</p>
+    <table class="table table-striped table-sm center">
+      ${d.data.filter(i => i.key && i.value)
+         .map(({key, value}) => html`<tr><td>${key}</td><td>${value}</td></tr>`)}
+    </table>
   </div>
   <div class="doc-detail-over"></div>
 `;
@@ -189,12 +196,27 @@ function PatientService() {
   //const documentDetail = uid => fetch('/db/' + encodeURIComponent(`select * from buckets where uid = '${uid}'`) +'?force=true')
   //                    .then(response => response.json()); 
   
-  const documentDetail = uid => Promise.resolve({uid});
+  const documentDetail = uid => fetch('/db/' + encodeURIComponent(`select (each(prop)).* from buckets where uid='${uid}'`) +'?force=true')
+                        .then(response => response.json())
+                        .then(data => ({uid, data}));
   
   return { findAll, findByName, findDocuments, documentDetail };
 }
 
 const patientService = new PatientService();
+
+document.onkeydown = function(evt) {
+    evt = evt || window.event;
+    var isEscape = false;
+    if ("key" in evt) {
+        isEscape = (evt.key === "Escape" || evt.key === "Esc");
+    } else {
+        isEscape = (evt.keyCode === 27);
+    }
+    if (isEscape) {
+        render(html``, extraContent);
+    }
+};
 
 patientService.findAll().then(list => render(tPatientList(list), pageContent));
 </script>
