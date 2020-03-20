@@ -58,7 +58,7 @@ func processText(imageFile string) (string, error) {
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
-	err := common.Watchdog(cmd, time.Millisecond*time.Duration(*ocrScanTimeout))
+	err := common.WatchdogCmd(cmd, time.Millisecond*time.Duration(*ocrScanTimeout))
 	if common.Error(err) {
 		return "", err
 	}
@@ -75,7 +75,7 @@ func processOrientation(imageFile string) (Orientation, error) {
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
-	err := common.Watchdog(cmd, time.Millisecond*time.Duration(*ocrOrientationTimeout))
+	err := common.WatchdogCmd(cmd, time.Millisecond*time.Duration(*ocrOrientationTimeout))
 	if common.Error(err) {
 		return ORIENTATION_0, err
 	}
