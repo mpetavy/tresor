@@ -8,8 +8,6 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/mpetavy/tresor/utils"
-
 	"github.com/mpetavy/tresor/models"
 	"github.com/mpetavy/tresor/service/database"
 	"github.com/mpetavy/tresor/service/index"
@@ -641,14 +639,6 @@ func (sha *Sha) Delete(suid string, options *Options) error {
 	return nil
 }
 
-type indexResult struct {
-	mimeType    string
-	mapping     index.Mapping
-	thumbnail   *[]byte
-	fulltext    string
-	orientation utils.Orientation
-}
-
 func (sha *Sha) rebuildBucket(wg *sync.WaitGroup, uid *ShaUID, version int) {
 	defer wg.Done()
 
@@ -656,7 +646,7 @@ func (sha *Sha) rebuildBucket(wg *sync.WaitGroup, uid *ShaUID, version int) {
 	bucket.Uid = uid.String()
 
 	wgIndex := sync.WaitGroup{}
-	mapIndex := make(map[int]indexResult)
+	mapIndex := make(map[int]index.IndexResult)
 
 	page := 1
 
@@ -676,10 +666,10 @@ func (sha *Sha) rebuildBucket(wg *sync.WaitGroup, uid *ShaUID, version int) {
 
 		wgIndex.Add(1)
 		go func(page int, path string) {
-			ir := indexResult{}
+			ir := index.IndexResult{}
 
 			err = index.Exec("index", func(index index.Index) error {
-				ir.mimeType, ir.mapping, ir.thumbnail, ir.fulltext, ir.orientation, err = index.Index(path, nil)
+				ir.MimeType, ir.Mapping, ir.Thumbnail, ir.Fulltext, ir.Orientation, err = index.Index(path, nil)
 
 				return err
 			})
@@ -702,7 +692,7 @@ func (sha *Sha) rebuildBucket(wg *sync.WaitGroup, uid *ShaUID, version int) {
 
 	for i := 1; i < page; i++ {
 		ir := mapIndex[i]
-		bucket.FileType = append(bucket.FileType, ir.mimeType)
+		bucket.FileType = append(bucket.FileType, ir.MimeType)
 	}
 
 	err := database.Exec("db", func(db database.Database) error {
