@@ -23,7 +23,15 @@ type Index interface {
 	Init(*common.Jason) error
 	Start() error
 	Stop() error
-	Index(path string, options *Options) (string, Mapping, *[]byte, string, utils.Orientation, error)
+	Index(path string, options *Options) (string, Mapping, []byte, string, utils.Orientation, error)
+}
+
+type IndexResult struct {
+	MimeType    string
+	Mapping     Mapping
+	Thumbnail   []byte
+	Fulltext    string
+	Orientation utils.Orientation
 }
 
 type instance struct {

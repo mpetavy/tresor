@@ -86,6 +86,7 @@ func StopServices() error {
 
 	storage.Close()
 	database.Close()
+	index.Close()
 
 	return nil
 }

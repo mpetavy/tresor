@@ -29,6 +29,10 @@
                 {
                     "name": "dicom",
                     "path": "d:/Dicom-Files/2010"
+                },
+                {
+                    "name": "pdf",
+                    "path": "d:/Dicom-Files/pdf"
                 }
             ]
         }
