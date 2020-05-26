@@ -14,49 +14,26 @@ import (
 )
 
 type PgsqlDB struct {
-	Username string
-	Password string
-	Host     string
-	Port     int
-	Database string
-	ORM      *pg.DB
-	DB       *sql.DB
+	cfg *Cfg
+	ORM *pg.DB
+	DB  *sql.DB
 }
 
 func NewPgsqlDB() (*PgsqlDB, error) {
 	return &PgsqlDB{}, nil
 }
 
-func (db *PgsqlDB) Init(cfg *common.Jason) error {
+func (db *PgsqlDB) Init(cfg *Cfg) error {
 	var err error
 
-	db.Username, err = cfg.String("username")
-	if common.Error(err) {
-		return err
-	}
-	db.Password, err = cfg.String("password")
-	if common.Error(err) {
-		return err
-	}
-	db.Host, err = cfg.String("host")
-	if common.Error(err) {
-		return err
-	}
-	db.Port, err = cfg.Int("port")
-	if common.Error(err) {
-		return err
-	}
-	db.Database, err = cfg.String("database")
-	if common.Error(err) {
-		return err
-	}
+	db.cfg = cfg
 
 	connStr := fmt.Sprintf("user='%s' password='%s' host='%s' port='%d' dbname='%s' sslmode='disable'",
-		db.Username,
-		db.Password,
-		db.Host,
-		db.Port,
-		db.Database)
+		cfg.Username,
+		cfg.Password,
+		cfg.Hostname,
+		cfg.Port,
+		cfg.Instance)
 
 	db.DB, err = sql.Open("postgres", connStr)
 	if common.Error(err) {
@@ -169,10 +146,10 @@ func (db *PgsqlDB) SQL(query string) (string, error) {
 
 func (db *PgsqlDB) Start() error {
 	db.ORM = pg.Connect(&pg.Options{
-		User:     db.Username,
-		Password: db.Password,
-		Addr:     fmt.Sprintf("%s:%d", db.Host, db.Port),
-		Database: db.Database,
+		User:     db.cfg.Username,
+		Password: db.cfg.Password,
+		Addr:     fmt.Sprintf("%s:%d", db.cfg.Hostname, db.cfg.Port),
+		Database: db.cfg.Instance,
 	})
 
 	return nil

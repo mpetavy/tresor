@@ -12,20 +12,27 @@ import (
 //go:generate
 
 const (
-	TYPE        = "db"
-	TYPE_STORM  = "storm"
-	TYPE_BADGER = "badger"
-	TYPE_MONGO  = "mongo"
-	TYPE_PGSQL  = "pgsql"
+	TYPE       = "db"
+	TYPE_PGSQL = "pgsql"
 
 	QUERY = "query"
 )
 
+type Cfg struct {
+	Driver   string `json:"driver" html:"Driver"`
+	Hostname string `json:"hostname" html:"Host name"`
+	Port     int    `json:"port" html:"Port" html_min:"0" html_max:"65535"`
+	Username string `json:"username" html:"Username"`
+	Password string `json:"password" html:"Password"`
+	Instance string `json:"instance" html:"Instance"`
+	Rebuild  bool   `json:"rebuild" html:"Rebuild"`
+}
+
 type Options struct {
 }
 
-type Database interface {
-	Init(*common.Jason) error
+type Handle interface {
+	Init(*Cfg) error
 	Start() error
 	Stop() error
 
@@ -42,33 +49,27 @@ type Database interface {
 	DeleteUser(field string, value interface{}, id int, options *Options) error
 }
 
-type instance struct {
-	cfg  *common.Jason
-	pool chan Database
-}
+var (
+	cfg  *Cfg
+	pool chan Handle
+)
 
-var instances map[string]instance
+func Init(c *Cfg, router *mux.Router) error {
+	cfg := c
 
-func init() {
-	instances = make(map[string]instance)
-}
-
-func Init(name string, cfg *common.Jason, router *mux.Router) error {
-	pool := make(chan Database, 10)
+	pool = make(chan Handle, 10)
 	for i := 0; i < 10; i++ {
-		db, err := create(cfg)
+		handle, err := create(cfg)
 		if common.Fatal(err) {
 			return err
 		}
 
-		pool <- db
+		pool <- handle
 	}
 
-	common.Info("Registered database '%s'", name)
+	common.Info("Registered database")
 
-	instances[name] = instance{cfg, pool}
-
-	router.PathPrefix("/" + name + "/").Handler(http.StripPrefix("/"+name+"/", http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+	router.PathPrefix("/db/").Handler(http.StripPrefix("/db/", http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		sql := r.URL.Path
 
 		var ba []byte
@@ -84,8 +85,8 @@ func Init(name string, cfg *common.Jason, router *mux.Router) error {
 		if force || ba == nil {
 			common.Debug(sql)
 
-			common.Error(Exec(name, func(db Database) error {
-				result, err := db.SQL(sql)
+			common.Error(Exec(func(handle Handle) error {
+				result, err := handle.SQL(sql)
 				if common.Error(err) {
 					return err
 				}
@@ -99,21 +100,17 @@ func Init(name string, cfg *common.Jason, router *mux.Router) error {
 		}
 
 		//rw.Header().Add("Content-type", "application/json")
-		rw.Write(ba)
+		_, err := rw.Write(ba)
+		common.Error(err)
 
 		return
 	})))
 
-	rebuild, err := cfg.Bool("rebuild")
-	if common.Error(err) {
-		return err
-	}
+	if cfg.Rebuild {
+		common.Info("Create Schema")
 
-	if rebuild {
-		common.Info("Create Schema %s", name)
-
-		common.Error(Exec(name, func(db Database) error {
-			err := db.CreateSchema([]interface{}{&models.User{}, &models.Bucket{}})
+		common.Error(Exec(func(handle Handle) error {
+			err := handle.CreateSchema([]interface{}{&models.User{}, &models.Bucket{}})
 			if common.Error(err) {
 				return err
 			}
@@ -128,69 +125,47 @@ func Init(name string, cfg *common.Jason, router *mux.Router) error {
 func Close() {
 }
 
-func Get(name string) Database {
-	i, ok := instances[name]
+func Get() Handle {
+	handle := <-pool
 
-	if !ok {
-		common.Fatal(&errors.ErrUnknownService{name})
-	}
-
-	db := <-i.pool
-
-	return db
+	return handle
 }
 
-func Put(name string, db Database) {
-	i, ok := instances[name]
-
-	if !ok {
-		common.Fatal(&errors.ErrUnknownService{name})
-	}
-
-	i.pool <- db
+func Put(handle Handle) {
+	pool <- handle
 }
 
-func Exec(name string, fn func(db Database) error) error {
-	db := Get(name)
-	defer Put(name, db)
+func Exec(fn func(handle Handle) error) error {
+	handle := Get()
+	defer Put(handle)
 
-	return fn(db)
+	return fn(handle)
 }
 
-func create(cfg *common.Jason) (Database, error) {
-	driver, err := cfg.String("driver")
-	if common.Error(err) {
-		return nil, err
-	}
+func create(cfg *Cfg) (Handle, error) {
+	var handle Handle
+	var err error
 
-	var db Database
-
-	switch driver {
-	case TYPE_STORM:
-		db, err = NewStormDB()
-	case TYPE_BADGER:
-		db, err = NewBadgerDB()
-	case TYPE_MONGO:
-		db, err = NewMongoDB()
+	switch cfg.Driver {
 	case TYPE_PGSQL:
-		db, err = NewPgsqlDB()
+		handle, err = NewPgsqlDB()
 	default:
-		return nil, &errors.ErrUnknownDriver{driver}
+		return nil, &errors.ErrUnknownDriver{Driver: cfg.Driver}
 	}
 
 	if common.Error(err) {
 		return nil, err
 	}
 
-	err = db.Init(cfg)
+	err = handle.Init(cfg)
 	if common.Error(err) {
 		return nil, err
 	}
 
-	err = db.Start()
+	err = handle.Start()
 	if common.Error(err) {
 		return nil, err
 	}
 
-	return db, nil
+	return handle, nil
 }

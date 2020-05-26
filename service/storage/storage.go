@@ -28,8 +28,21 @@ type Options struct {
 	VolumeName string
 }
 
-type Storage interface {
-	Init(*common.Jason) error
+type VolumeCfg struct {
+	Name string `json:"name" html:"Name"`
+	Path string `json:"path" html:"path"`
+	Flat bool   `json:"flat" html:"Flat"`
+	Zip  bool   `json:"zip" html:"Zip"`
+}
+
+type Cfg struct {
+	Driver  string      `json:"driver" html:"Driver"`
+	Rebuild bool        `json:"rebuild" html:"Rebuild"`
+	Volumes []VolumeCfg `json:"volumes" html:"Volumes"`
+}
+
+type Handle interface {
+	Init(*Cfg) error
 	Start() error
 	Stop() error
 	Rebuild() (int, error)
@@ -38,19 +51,15 @@ type Storage interface {
 	Delete(string, *Options) error
 }
 
-type instance struct {
-	cfg  *common.Jason
-	pool chan Storage
-}
+var (
+	cfg  *Cfg
+	pool chan Handle
+)
 
-var instances map[string]instance
+func Init(c *Cfg, router *mux.Router) error {
+	cfg := c
 
-func init() {
-	instances = make(map[string]instance)
-}
-
-func Init(name string, cfg *common.Jason, router *mux.Router) error {
-	pool := make(chan Storage, 10)
+	pool = make(chan Handle, 10)
 	for i := 0; i < 10; i++ {
 		storage, err := create(cfg)
 		if common.Error(err) {
@@ -60,12 +69,10 @@ func Init(name string, cfg *common.Jason, router *mux.Router) error {
 		pool <- storage
 	}
 
-	instances[name] = instance{cfg, pool}
-
-	router.PathPrefix("/" + name + "/").Handler(http.StripPrefix("/"+name+"/", http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+	router.PathPrefix("/" + TYPE + "/").Handler(http.StripPrefix("/"+TYPE+"/", http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		uid := r.URL.Path
 
-		common.Error(Exec(name, func(storage Storage) error {
+		common.Error(Exec(func(storage Handle) error {
 			_, _, _, err := storage.Load(uid, rw, nil)
 			if common.Error(err) {
 				return err
@@ -75,10 +82,10 @@ func Init(name string, cfg *common.Jason, router *mux.Router) error {
 		}))
 	})))
 
-	router.PathPrefix("/" + name + "-pixeldata/").Handler(http.StripPrefix("/"+name+"-pixeldata/", http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+	router.PathPrefix("/" + TYPE + "-pixeldata/").Handler(http.StripPrefix("/"+TYPE+"-pixeldata/", http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		uid := r.URL.Path
 
-		common.Error(Exec(name, func(storage Storage) error {
+		common.Error(Exec(func(storage Handle) error {
 			var ba []byte
 			var buf bytes.Buffer
 
@@ -143,22 +150,15 @@ func Init(name string, cfg *common.Jason, router *mux.Router) error {
 		}))
 	})))
 
-	common.Info("Registered storage '%s'", name)
+	common.Info("Registered storage")
 
-	rebuild, err := cfg.Bool("rebuild")
-	if common.Error(err) {
-		return err
-	}
-
-	if rebuild {
+	if cfg.Rebuild {
 		start := time.Now()
 
 		common.Info("Rebuild started ...")
 
-		common.Error(Exec(name, func(storage Storage) error {
-			var c int
-
-			c, err = storage.Rebuild()
+		common.Error(Exec(func(storage Handle) error {
+			c, err := storage.Rebuild()
 			if common.Error(err) {
 				return err
 			}
@@ -175,33 +175,21 @@ func Init(name string, cfg *common.Jason, router *mux.Router) error {
 func Close() {
 }
 
-func Get(name string) Storage {
-	i, ok := instances[name]
+func Get() Handle {
+	handle := <-pool
 
-	if !ok {
-		common.Fatal(&errors.ErrUnknownService{name})
-	}
-
-	storage := <-i.pool
-
-	return storage
+	return handle
 }
 
-func Put(name string, storage Storage) {
-	i, ok := instances[name]
-
-	if !ok {
-		common.Fatal(&errors.ErrUnknownService{name})
-	}
-
-	i.pool <- storage
+func Put(handle Handle) {
+	pool <- handle
 }
 
-func Exec(name string, fn func(storage Storage) error) error {
-	storage := Get(name)
-	defer Put(name, storage)
+func Exec(fn func(handle Handle) error) error {
+	handle := Get()
+	defer Put(handle)
 
-	return fn(storage)
+	return fn(handle)
 }
 
 func getFromList(l list.List, index int) interface{} {
@@ -214,15 +202,11 @@ func getFromList(l list.List, index int) interface{} {
 	return e.Value
 }
 
-func create(cfg *common.Jason) (Storage, error) {
-	driver, err := cfg.String("driver")
-	if common.Error(err) {
-		return nil, err
-	}
+func create(cfg *Cfg) (Handle, error) {
+	var storage Handle
+	var err error
 
-	var storage Storage
-
-	switch driver {
+	switch cfg.Driver {
 	case TYPE_FS:
 		storage, err = NewFs()
 		if common.Error(err) {
@@ -234,7 +218,7 @@ func create(cfg *common.Jason) (Storage, error) {
 			return nil, err
 		}
 	default:
-		return nil, &errors.ErrUnknownDriver{driver}
+		return nil, &errors.ErrUnknownDriver{Driver: cfg.Driver}
 	}
 
 	err = storage.Init(cfg)

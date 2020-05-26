@@ -1,54 +1,44 @@
 {
-    "flags": {
-        "log.verbose": "false",
-        "service": "simulate"
-    },
-    "services": [
-        {
-            "name": "index",
-            "type": "index",
-            "driver": ""
-        },
-        {
-            "name": "db",
-            "type": "db",
-            "driver": "pgsql",
-            "rebuild": true,
-            "username": "postgres",
-            "password": "postgres",
-            "host": "localhost",
-            "port": 5432,
-            "database": "tresor"
-        },
-        {
-            "name": "storage",
-            "type": "storage",
-            "driver": "fs",
-            "rebuild": true,
-            "volumes": [
-                {
-                    "name": "dicom",
-                    "path": "d:/Dicom-Files/2010"
-                },
-                {
-                    "name": "pdf",
-                    "path": "d:/Dicom-Files/pdf"
-                }
-            ]
-        }
-        //        {
-        //            "name": "storage",
-        //            "type": "storage",
-        //            "driver": "sha",
-        //            "rebuild": true,
-        //            "volumes": [
-        //                {
-        //                    "name": "sample",
-        //                    "path": "~/archive/sample",
-        //                    "flat": true,
-        //                    "zip": true
-        //                }
-        //            ]
-        //        }
+  "flags": {
+    "log.verbose": "false",
+    "service": "simulate"
+  },
+  "database": {
+    "driver": "pgsql",
+    "hostname": "localhost",
+    "port": 5432,
+    "username": "postgres",
+    "password": "postgres",
+    "instance": "tresor",
+    "rebuild": true
+  },
+  "index": {
+    "driver": "default"
+  },
+  "storage": {
+    "driver": "fs",
+    "rebuild": true,
+    "volumes": [
+      {
+        "name": "dicom",
+        "path": "d:/Dicom-Files/2010"
+      },
+      {
+        "name": "pdf",
+        "path": "d:/Dicom-Files/pdf"
+      }
     ]
+  }
+  //  "storage": {
+  //    "driver": "sha",
+  //    "rebuild": true,
+  //    "volumes": [
+  //      {
+  //        "name": "sample",
+  //        "path": "~/archive/sample",
+  //        "flat": true,
+  //        "zip": true
+  //      }
+  //    ]
+  //  }
 }
