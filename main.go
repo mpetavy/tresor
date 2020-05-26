@@ -14,7 +14,6 @@ import (
 
 // https://github.com/creamdog/gonfig
 // https://github.com/sadlil/go-trigger
-// https://github.com/antonholmquist/jason
 
 // Http service
 // PDF indexer

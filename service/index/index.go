@@ -1,8 +1,6 @@
 package index
 
 import (
-	"net/http"
-
 	"github.com/mpetavy/tresor/utils"
 
 	"github.com/gorilla/mux"
@@ -14,13 +12,17 @@ const (
 	TYPE = "index"
 )
 
+type Cfg struct {
+	Driver string `json:"driver" html:"Driver"`
+}
+
 type Options struct {
 }
 
 type Mapping map[string]string
 
-type Index interface {
-	Init(*common.Jason) error
+type Handle interface {
+	Init(*Cfg) error
 	Start() error
 	Stop() error
 	Index(path string, options *Options) (string, Mapping, []byte, string, utils.Orientation, error)
@@ -34,45 +36,25 @@ type IndexResult struct {
 	Orientation utils.Orientation
 }
 
-type instance struct {
-	cfg  *common.Jason
-	pool chan Index
-}
+var (
+	cfg  *Cfg
+	pool chan Handle
+)
 
-var instances map[string]instance
+func Init(c *Cfg, router *mux.Router) error {
+	cfg := c
 
-func init() {
-	instances = make(map[string]instance)
-}
-
-func Init(name string, cfg *common.Jason, router *mux.Router) error {
-	pool := make(chan Index, 10)
+	pool = make(chan Handle, 10)
 	for i := 0; i < 10; i++ {
-		index, err := create(cfg)
+		handle, err := create(cfg)
 		if common.Error(err) {
 			common.Fatal(err)
 		}
 
-		pool <- index
+		pool <- handle
 	}
 
-	instances[name] = instance{cfg, pool}
-
-	router.PathPrefix("/"+name).Subrouter().HandleFunc("/{uid}", func(rw http.ResponseWriter, r *http.Request) {
-		//v := mux.Vars(r)
-		//
-		//index := Get(name)
-		//defer Put(name, index)
-		//
-		//_, _, err := (*index).Load(v["uid"], rw, nil)
-		//if common.Error(err) {
-		//	common.Error(err)
-		//
-		//	return
-		//}
-	})
-
-	common.Info("Registered index '%s'", name)
+	common.Info("Registered handle")
 
 	return nil
 }
@@ -80,62 +62,46 @@ func Init(name string, cfg *common.Jason, router *mux.Router) error {
 func Close() {
 }
 
-func Get(name string) Index {
-	i, ok := instances[name]
+func Get() Handle {
+	handle := <-pool
 
-	if !ok {
-		common.Fatal(&errors.ErrUnknownService{name})
-	}
-
-	index := <-i.pool
-
-	return index
+	return handle
 }
 
-func Put(name string, index Index) {
-	i, ok := instances[name]
-
-	if !ok {
-		common.Fatal(&errors.ErrUnknownService{name})
-	}
-
-	i.pool <- index
+func Put(handle Handle) {
+	pool <- handle
 }
 
-func Exec(name string, fn func(index Index) error) error {
-	index := Get(name)
-	defer Put(name, index)
+func Exec(fn func(handle Handle) error) error {
+	handle := Get()
+	defer Put(handle)
 
-	return fn(index)
+	return fn(handle)
 }
 
-func create(cfg *common.Jason) (Index, error) {
-	driver, err := cfg.String("driver")
-	if common.Error(err) {
-		return nil, err
-	}
+func create(cfg *Cfg) (Handle, error) {
+	var handle Handle
+	var err error
 
-	var index Index
-
-	switch driver {
+	switch cfg.Driver {
 	case DEFAULT_INDEXER:
-		index, err = NewDefaultIndexer()
+		handle, err = NewDefaultIndexer()
 		if common.Error(err) {
 			return nil, err
 		}
 	default:
-		return nil, &errors.ErrUnknownDriver{driver}
+		return nil, &errors.ErrUnknownDriver{Driver: cfg.Driver}
 	}
 
-	err = index.Init(cfg)
+	err = handle.Init(cfg)
 	if common.Error(err) {
 		return nil, err
 	}
 
-	err = index.Start()
+	err = handle.Start()
 	if common.Error(err) {
 		return nil, err
 	}
 
-	return index, nil
+	return handle, nil
 }

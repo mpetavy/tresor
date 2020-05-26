@@ -97,7 +97,6 @@ func (uid *ShaUID) String() string {
 }
 
 type Sha struct {
-	name    string
 	volumes map[string]*ShaVolume
 	uid     int
 	mu      *sync.Mutex
@@ -142,37 +141,9 @@ func NewSha() (*Sha, error) {
 	return sha, nil
 }
 
-func (sha *Sha) Init(cfg *common.Jason) error {
-	name, err := cfg.String("name")
-	if common.Error(err) {
-		return err
-	}
-	sha.name = name
-
-	for i := 0; i < cfg.ArrayCount("volumes"); i++ {
-		v, err := cfg.Array("volumes", i)
-		if common.Error(err) {
-			return err
-		}
-
-		volumeName, err := v.String("name")
-		if common.Error(err) {
-			return err
-		}
-		path, err := v.String("path")
-		if common.Error(err) {
-			return err
-		}
-		flat, err := v.Bool("flat", false)
-		if common.Error(err) {
-			return err
-		}
-		zip, err := v.Bool("zip", false)
-		if common.Error(err) {
-			return err
-		}
-
-		path = common.CleanPath(path)
+func (sha *Sha) Init(cfg *Cfg) error {
+	for i := 0; i < len(cfg.Volumes); i++ {
+		path := common.CleanPath(cfg.Volumes[i].Path)
 
 		b, err := common.FileExists(path)
 		if common.Error(err) {
@@ -180,10 +151,10 @@ func (sha *Sha) Init(cfg *common.Jason) error {
 		}
 
 		if !b {
-			return &ErrVolumePathNotFound{volumeName, path}
+			return &ErrVolumePathNotFound{volume: cfg.Volumes[i].Name, path: path}
 		}
 
-		vol, err := NewShaVolume(volumeName, path, flat, zip)
+		vol, err := NewShaVolume(cfg.Volumes[i].Name, path, cfg.Volumes[i].Flat, cfg.Volumes[i].Zip)
 		if common.Error(err) {
 			return err
 		}
@@ -225,8 +196,8 @@ func (sha *Sha) RemoveVolume(v *ShaVolume) {
 }
 
 func (sha *Sha) nextUID() int {
-	cluster.Lock(cluster.STORAGE(sha.name))
-	defer cluster.Unlock(cluster.STORAGE(sha.name))
+	cluster.Lock(cluster.ByStorage())
+	defer cluster.Unlock(cluster.ByStorage())
 
 	sha.uid++
 
@@ -441,8 +412,8 @@ func (sha *Sha) Store(suid string, source io.Reader, options *Options) (string, 
 	}
 
 	if uid.Id != 0 {
-		cluster.Lock(cluster.STORAGE_UID(sha.name, strconv.Itoa(uid.Id)))
-		defer cluster.Unlock(cluster.STORAGE_UID(sha.name, strconv.Itoa(uid.Id)))
+		cluster.Lock(cluster.ByStorageUid(strconv.Itoa(uid.Id)))
+		defer cluster.Unlock(cluster.ByStorageUid(strconv.Itoa(uid.Id)))
 	}
 
 	var volume *ShaVolume
@@ -484,8 +455,8 @@ func (sha *Sha) Store(suid string, source io.Reader, options *Options) (string, 
 		uid.Version = 1
 	}
 
-	cluster.Lock(cluster.STORAGE_VOLUME(sha.name, volume.Name))
-	defer cluster.Unlock(cluster.STORAGE_VOLUME(sha.name, volume.Name))
+	cluster.Lock(cluster.ByStorageVolume(volume.Name))
+	defer cluster.Unlock(cluster.ByStorageVolume(volume.Name))
 
 	path, err := createShaPath(volume.Path, uid, volume.Flat, false)
 	if common.Error(err) {
@@ -544,8 +515,8 @@ func (sha *Sha) Load(suid string, dest io.Writer, options *Options) (string, *[]
 		return "", nil, -1, err
 	}
 
-	cluster.Lock(cluster.STORAGE_UID(sha.name, strconv.Itoa(uid.Id)))
-	defer cluster.Unlock(cluster.STORAGE_UID(sha.name, strconv.Itoa(uid.Id)))
+	cluster.Lock(cluster.ByStorageUid(strconv.Itoa(uid.Id)))
+	defer cluster.Unlock(cluster.ByStorageUid(strconv.Itoa(uid.Id)))
 
 	_, path, err := sha.find(uid, options)
 	if common.Error(err) {
@@ -581,8 +552,8 @@ func (sha *Sha) Delete(suid string, options *Options) error {
 		return err
 	}
 
-	cluster.Lock(cluster.STORAGE_UID(sha.name, strconv.Itoa(uid.Id)))
-	defer cluster.Unlock(cluster.STORAGE_UID(sha.name, strconv.Itoa(uid.Id)))
+	cluster.Lock(cluster.ByStorageUid(strconv.Itoa(uid.Id)))
+	defer cluster.Unlock(cluster.ByStorageUid(strconv.Itoa(uid.Id)))
 
 	var volume *ShaVolume
 	var path string
@@ -603,8 +574,8 @@ func (sha *Sha) Delete(suid string, options *Options) error {
 			return err
 		}
 	} else {
-		cluster.Lock(cluster.STORAGE_VOLUME(sha.name, volume.Name))
-		defer cluster.Unlock(cluster.STORAGE_VOLUME(sha.name, volume.Name))
+		cluster.Lock(cluster.ByStorageVolume(volume.Name))
+		defer cluster.Unlock(cluster.ByStorageVolume(volume.Name))
 
 		err := os.RemoveAll(path)
 		if common.Error(err) {
@@ -668,7 +639,7 @@ func (sha *Sha) rebuildBucket(wg *sync.WaitGroup, uid *ShaUID, version int) {
 		go func(page int, path string) {
 			ir := index.IndexResult{}
 
-			err = index.Exec("index", func(index index.Index) error {
+			err = index.Exec(func(index index.Handle) error {
 				ir.MimeType, ir.Mapping, ir.Thumbnail, ir.Fulltext, ir.Orientation, err = index.Index(path, nil)
 
 				return err
@@ -695,7 +666,7 @@ func (sha *Sha) rebuildBucket(wg *sync.WaitGroup, uid *ShaUID, version int) {
 		bucket.FileType = append(bucket.FileType, ir.MimeType)
 	}
 
-	err := database.Exec("db", func(db database.Database) error {
+	err := database.Exec(func(db database.Handle) error {
 		return db.SaveBucket(&bucket, nil)
 	})
 	if common.Error(err) {
@@ -705,8 +676,8 @@ func (sha *Sha) rebuildBucket(wg *sync.WaitGroup, uid *ShaUID, version int) {
 }
 
 func (sha *Sha) Rebuild() (int, error) {
-	cluster.Lock(cluster.STORAGE(sha.name))
-	defer cluster.Unlock(cluster.STORAGE(sha.name))
+	cluster.Lock(cluster.ByStorage())
+	defer cluster.Unlock(cluster.ByStorage())
 
 	c := 0
 	wg := sync.WaitGroup{}

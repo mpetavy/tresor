@@ -18,16 +18,16 @@ func init() {
 	mutexMap = make(map[string]*sync.Mutex)
 }
 
-func STORAGE(storage string) lockid {
-	return lockid{"STORAGE-" + strings.ToUpper(storage)}
+func ByStorage() lockid {
+	return lockid{"STORAGE"}
 }
 
-func STORAGE_UID(storage string, uid string) lockid {
-	return lockid{"STORAGE_UID-" + strings.ToUpper(storage) + "-" + strings.ToUpper(uid)}
+func ByStorageUid(uid string) lockid {
+	return lockid{"STORAGE_UID-" + strings.ToUpper(uid)}
 }
 
-func STORAGE_VOLUME(storage string, volume string) lockid {
-	return lockid{"STORAGE_VOLUME-" + strings.ToUpper(storage) + "-" + strings.ToUpper(volume)}
+func ByStorageVolume(volume string) lockid {
+	return lockid{"STORAGE_VOLUME-" + strings.ToUpper(volume)}
 }
 
 func Lock(id lockid) {

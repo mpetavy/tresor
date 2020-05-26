@@ -15,24 +15,17 @@ import (
 )
 
 const (
-	DEFAULT_INDEXER = ""
+	DEFAULT_INDEXER = "default"
 )
 
 type DefaultIndexer struct {
-	name string
 }
 
 func NewDefaultIndexer() (*DefaultIndexer, error) {
 	return &DefaultIndexer{}, nil
 }
 
-func (defaultIndexer *DefaultIndexer) Init(cfg *common.Jason) error {
-	name, err := cfg.String("name")
-	if common.Error(err) {
-		return err
-	}
-	defaultIndexer.name = name
-
+func (defaultIndexer *DefaultIndexer) Init(cfg *Cfg) error {
 	return nil
 }
 

@@ -52,7 +52,6 @@ func (uid *FsUID) String() string {
 }
 
 type Fs struct {
-	name    string
 	volumes map[string]*FsVolume
 	mu      *sync.Mutex
 }
@@ -94,29 +93,9 @@ func NewFs() (*Fs, error) {
 	return fs, nil
 }
 
-func (fs *Fs) Init(cfg *common.Jason) error {
-	name, err := cfg.String("name")
-	if common.Error(err) {
-		return err
-	}
-	fs.name = name
-
-	for i := 0; i < cfg.ArrayCount("volumes"); i++ {
-		v, err := cfg.Array("volumes", i)
-		if common.Error(err) {
-			return err
-		}
-
-		volumeName, err := v.String("name")
-		if common.Error(err) {
-			return err
-		}
-		path, err := v.String("path")
-		if common.Error(err) {
-			return err
-		}
-
-		path = common.CleanPath(path)
+func (fs *Fs) Init(cfg *Cfg) error {
+	for i := 0; i < len(cfg.Volumes); i++ {
+		path := common.CleanPath(cfg.Volumes[i].Path)
 
 		b, err := common.FileExists(path)
 		if common.Error(err) {
@@ -124,10 +103,10 @@ func (fs *Fs) Init(cfg *common.Jason) error {
 		}
 
 		if !b {
-			return &ErrVolumePathNotFound{volumeName, path}
+			return &ErrVolumePathNotFound{volume: cfg.Volumes[i].Name, path: path}
 		}
 
-		vol, err := NewFsVolume(volumeName, path)
+		vol, err := NewFsVolume(cfg.Volumes[i].Name, path)
 		if common.Error(err) {
 			return err
 		}
@@ -235,8 +214,8 @@ func (fs *Fs) Store(suid string, source io.Reader, options *Options) (string, *[
 		return "", nil, err
 	}
 
-	cluster.Lock(cluster.STORAGE_UID(fs.name, uid.Path))
-	defer cluster.Unlock(cluster.STORAGE_UID(fs.name, uid.Path))
+	cluster.Lock(cluster.ByStorageUid(uid.Path))
+	defer cluster.Unlock(cluster.ByStorageUid(uid.Path))
 
 	var volume *FsVolume
 
@@ -257,8 +236,8 @@ func (fs *Fs) Store(suid string, source io.Reader, options *Options) (string, *[
 
 	uid.Path = suid
 
-	cluster.Lock(cluster.STORAGE_VOLUME(fs.name, volume.Name))
-	defer cluster.Unlock(cluster.STORAGE_VOLUME(fs.name, volume.Name))
+	cluster.Lock(cluster.ByStorageVolume(volume.Name))
+	defer cluster.Unlock(cluster.ByStorageVolume(volume.Name))
 
 	path, err := createFsPath(volume.Path, uid)
 	if common.Error(err) {
@@ -317,8 +296,8 @@ func (fs *Fs) Load(suid string, dest io.Writer, options *Options) (string, *[]by
 		return "", nil, -1, err
 	}
 
-	cluster.Lock(cluster.STORAGE_UID(fs.name, uid.Path))
-	defer cluster.Unlock(cluster.STORAGE_UID(fs.name, uid.Path))
+	cluster.Lock(cluster.ByStorageUid(uid.Path))
+	defer cluster.Unlock(cluster.ByStorageUid(uid.Path))
 
 	_, path, err := fs.find(uid, options)
 	if common.Error(err) {
@@ -362,8 +341,8 @@ func (fs *Fs) Delete(suid string, options *Options) error {
 		return err
 	}
 
-	cluster.Lock(cluster.STORAGE_UID(fs.name, uid.Path))
-	defer cluster.Unlock(cluster.STORAGE_UID(fs.name, uid.Path))
+	cluster.Lock(cluster.ByStorageUid(uid.Path))
+	defer cluster.Unlock(cluster.ByStorageUid(uid.Path))
 
 	b, err := common.IsFile(path)
 	if common.Error(err) {
@@ -376,8 +355,8 @@ func (fs *Fs) Delete(suid string, options *Options) error {
 			return err
 		}
 	} else {
-		cluster.Lock(cluster.STORAGE_VOLUME(fs.name, volume.Name))
-		defer cluster.Unlock(cluster.STORAGE_VOLUME(fs.name, volume.Name))
+		cluster.Lock(cluster.ByStorageVolume(volume.Name))
+		defer cluster.Unlock(cluster.ByStorageVolume(volume.Name))
 
 		err := os.RemoveAll(path)
 		if common.Error(err) {
@@ -431,7 +410,7 @@ func (fs *Fs) rebuildBucket(wg *sync.WaitGroup, uid *FsUID) error {
 	var mimeType string
 	var mapping index.Mapping
 
-	err = index.Exec("index", func(index index.Index) error {
+	err = index.Exec(func(index index.Handle) error {
 		mimeType, mapping, _, _, _, err = index.Index(path, nil)
 
 		return err
@@ -452,7 +431,7 @@ func (fs *Fs) rebuildBucket(wg *sync.WaitGroup, uid *FsUID) error {
 
 	common.Debug("%s: %s", (*uid).String(), hex.EncodeToString(*h))
 
-	err = database.Exec("db", func(db database.Database) error {
+	err = database.Exec(func(db database.Handle) error {
 		return db.SaveBucket(&bucket, nil)
 	})
 	if common.Error(err) {
@@ -463,16 +442,16 @@ func (fs *Fs) rebuildBucket(wg *sync.WaitGroup, uid *FsUID) error {
 }
 
 func (fs *Fs) Rebuild() (int, error) {
-	cluster.Lock(cluster.STORAGE(fs.name))
-	defer cluster.Unlock(cluster.STORAGE(fs.name))
+	cluster.Lock(cluster.ByStorage())
+	defer cluster.Unlock(cluster.ByStorage())
 
-	err := database.Exec("db", func(db database.Database) error {
+	err := database.Exec(func(db database.Handle) error {
 		return db.SwitchIndices([]interface{}{models.NewBucket()}, false)
 	})
 	if common.Error(err) {
 		return -1, err
 	}
-	defer common.Error(database.Exec("db", func(db database.Database) error {
+	defer common.Error(database.Exec(func(db database.Handle) error {
 		return db.SwitchIndices([]interface{}{models.NewBucket()}, true)
 	}))
 
