@@ -51,7 +51,7 @@ func TestCreatePath(t *testing.T) {
 
 	for _, test := range tests {
 		p, err := createShaPath("", test.Value, test.Flat, test.Zip)
-		if common.Fatal(err) {
+		if common.Error(err) {
 			t.Fatal(err)
 		}
 		assert.Equal(t, test.Expected, p)
@@ -63,7 +63,9 @@ func TestBasicArchive(t *testing.T) {
 	if common.Error(err) {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(path)
+	defer func() {
+		common.Error(os.RemoveAll(path))
+	}()
 
 	fs, err := NewSha()
 	if common.Error(err) {
@@ -303,10 +305,6 @@ func TestFilestorage(t *testing.T) {
 			}
 
 			for page := 0; page < len(m.hash); page++ {
-				if err != nil {
-					t.Fatal(err)
-				}
-
 				m.uid.Object = PAGE + "." + strconv.Itoa(page)
 
 				_, hash, _, err := fs.Load(m.uid.String(), ioutil.Discard, nil)
