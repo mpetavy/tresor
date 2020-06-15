@@ -12,7 +12,6 @@ import (
 //go:generate
 
 const (
-	TYPE       = "db"
 	TYPE_PGSQL = "pgsql"
 
 	QUERY = "query"
@@ -55,12 +54,12 @@ var (
 )
 
 func Init(c *Cfg, router *mux.Router) error {
-	cfg := c
+	cfg = c
 
 	pool = make(chan Handle, 10)
 	for i := 0; i < 10; i++ {
 		handle, err := create(cfg)
-		if common.Fatal(err) {
+		if common.Error(err) {
 			return err
 		}
 
@@ -102,8 +101,6 @@ func Init(c *Cfg, router *mux.Router) error {
 		//rw.Header().Add("Content-type", "application/json")
 		_, err := rw.Write(ba)
 		common.Error(err)
-
-		return
 	})))
 
 	if cfg.Rebuild {

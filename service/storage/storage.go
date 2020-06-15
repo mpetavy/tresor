@@ -57,13 +57,13 @@ var (
 )
 
 func Init(c *Cfg, router *mux.Router) error {
-	cfg := c
+	cfg = c
 
 	pool = make(chan Handle, 10)
 	for i := 0; i < 10; i++ {
 		storage, err := create(cfg)
 		if common.Error(err) {
-			common.Fatal(err)
+			common.Error(err)
 		}
 
 		pool <- storage
@@ -163,7 +163,7 @@ func Init(c *Cfg, router *mux.Router) error {
 				return err
 			}
 
-			common.Info("Rebuild successfully completed. time needed %v, %d buckets", time.Now().Sub(start), c)
+			common.Info("Rebuild successfully completed. time needed %v, %d buckets", time.Since(start), c)
 
 			return nil
 		}))
