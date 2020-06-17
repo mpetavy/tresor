@@ -404,8 +404,8 @@ func (fs *Fs) rebuildBucket(wg *sync.WaitGroup, uid *FsUID) error {
 		return err
 	}
 
-	bucket.FileName = append(bucket.FileName, uid.String())
-	bucket.FileHash = append(bucket.FileHash, hex.EncodeToString(*h))
+	bucket.FileNames = append(bucket.FileNames, uid.String())
+	bucket.FileHashes = append(bucket.FileHashes, hex.EncodeToString(*h))
 
 	var mimeType string
 	var mapping index.Mapping
@@ -420,14 +420,14 @@ func (fs *Fs) rebuildBucket(wg *sync.WaitGroup, uid *FsUID) error {
 	}
 
 	if len(mimeType) > 0 {
-		bucket.FileType = append(bucket.FileType, mimeType)
+		bucket.FileTypes = append(bucket.FileTypes, mimeType)
 	}
 
 	for k, v := range mapping {
-		bucket.Prop[k] = v
+		bucket.Props[k] = v
 	}
 
-	bucket.FileLen = append(bucket.FileLen, n)
+	bucket.FileSizes = append(bucket.FileSizes, n)
 
 	common.Debug("%s: %s", (*uid).String(), hex.EncodeToString(*h))
 

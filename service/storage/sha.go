@@ -632,8 +632,8 @@ func (sha *Sha) rebuildBucket(wg *sync.WaitGroup, uid *ShaUID, version int) {
 			break
 		}
 
-		bucket.FileName = append(bucket.FileName, uid.Object)
-		bucket.FileHash = append(bucket.FileHash, hex.EncodeToString(*h))
+		bucket.FileNames = append(bucket.FileNames, uid.Object)
+		bucket.FileHashes = append(bucket.FileHashes, hex.EncodeToString(*h))
 
 		wgIndex.Add(1)
 		go func(page int, path string) {
@@ -654,7 +654,7 @@ func (sha *Sha) rebuildBucket(wg *sync.WaitGroup, uid *ShaUID, version int) {
 			wgIndex.Done()
 		}(page, path)
 
-		bucket.FileLen = append(bucket.FileLen, n)
+		bucket.FileSizes = append(bucket.FileSizes, n)
 
 		common.Debug("%s: %s", (*uid).String(), hex.EncodeToString(*h))
 	}
@@ -663,7 +663,7 @@ func (sha *Sha) rebuildBucket(wg *sync.WaitGroup, uid *ShaUID, version int) {
 
 	for i := 1; i < page; i++ {
 		ir := mapIndex[i]
-		bucket.FileType = append(bucket.FileType, ir.MimeType)
+		bucket.FileTypes = append(bucket.FileTypes, ir.MimeType)
 	}
 
 	err := database.Exec(func(db database.Handle) error {
