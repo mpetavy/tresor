@@ -5,17 +5,17 @@ import (
 	"time"
 )
 
-func (db *PgsqlDB) SaveBucket(document *models.Bucket, options *Options) error {
-	if document.CreatedAt.IsZero() {
-		document.CreatedAt = time.Now()
+func (db *PgsqlDB) SaveBucket(bucket *models.Bucket, options *Options) error {
+	if bucket.CreatedAt.IsZero() {
+		bucket.CreatedAt = time.Now()
 	} else {
-		document.ModifiedAt = time.Now()
+		bucket.ModifiedAt = time.Now()
 	}
 
-	return db.ORM.Insert(document)
+	return db.ORM.Insert(bucket)
 }
 
-func (db *PgsqlDB) LoadBucket(field string, value interface{}, document *models.Bucket, options *Options) error {
+func (db *PgsqlDB) LoadBucket(field string, value interface{}, bucket *models.Bucket, options *Options) error {
 	return nil
 }
 

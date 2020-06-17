@@ -1,17 +1,24 @@
 {
   "flags": {
-    "log.verbose": "false",
+    "log.verbose": "true",
     "service": "simulate"
   },
   "database": {
-    "driver": "pgsql",
+    "driver": "mongodb",
     "hostname": "localhost",
-    "port": 5432,
-    "username": "postgres",
-    "password": "postgres",
+    "port": 27017,
     "instance": "tresor",
     "rebuild": true
   },
+  //  "database": {
+  //    "driver": "pgsql",
+  //    "hostname": "localhost",
+  //    "port": 5432,
+  //    "username": "postgres",
+  //    "password": "postgres",
+  //    "instance": "tresor",
+  //    "rebuild": true
+  //  },
   "index": {
     "driver": "default"
   },
@@ -21,11 +28,7 @@
     "volumes": [
       {
         "name": "dicom",
-        "path": "d:/Dicom-Files/2010"
-      },
-      {
-        "name": "pdf",
-        "path": "d:/Dicom-Files/pdf"
+        "path": "d:/Dicom-Files"
       }
     ]
   }

@@ -12,7 +12,8 @@ import (
 //go:generate
 
 const (
-	TYPE_PGSQL = "pgsql"
+	TYPE_MONGODB = "mongodb"
+	TYPE_PGSQL   = "pgsql"
 
 	QUERY = "query"
 )
@@ -24,6 +25,7 @@ type Cfg struct {
 	Username string `json:"username" html:"Username"`
 	Password string `json:"password" html:"Password"`
 	Instance string `json:"instance" html:"Instance"`
+	SSL      bool   `json:"ssl" html:"SSL"`
 	Rebuild  bool   `json:"rebuild" html:"Rebuild"`
 }
 
@@ -144,6 +146,8 @@ func create(cfg *Cfg) (Handle, error) {
 	var err error
 
 	switch cfg.Driver {
+	case TYPE_MONGODB:
+		handle, err = NewMongoDB()
 	case TYPE_PGSQL:
 		handle, err = NewPgsqlDB()
 	default:
