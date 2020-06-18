@@ -4,12 +4,15 @@ import (
 	"bytes"
 	"container/list"
 	"fmt"
+	"github.com/fsnotify/fsnotify"
 	"github.com/mpetavy/go-dicom"
 	"github.com/mpetavy/go-dicom/dicomtag"
 	"github.com/mpetavy/tresor/utils"
 	"image/jpeg"
 	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -52,12 +55,21 @@ type Handle interface {
 }
 
 var (
-	cfg  *Cfg
-	pool chan Handle
+	cfg          *Cfg
+	pool         chan Handle
+	watcher      *fsnotify.Watcher
+	watcherPaths = make(map[string]bool)
 )
 
 func Init(c *Cfg, router *mux.Router) error {
 	cfg = c
+
+	var err error
+
+	watcher, err = fsnotify.NewWatcher()
+	if common.Error(err) {
+		return err
+	}
 
 	pool = make(chan Handle, 10)
 	for i := 0; i < 10; i++ {
@@ -232,4 +244,43 @@ func create(cfg *Cfg) (Handle, error) {
 	}
 
 	return storage, nil
+}
+
+func addWatcher(path string) error {
+	if _, ok := watcherPaths[path]; !ok {
+		err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+			if common.Error(err) {
+				return err
+			}
+
+			if !info.IsDir() {
+				return nil
+			}
+
+			if _, ok := watcherPaths[path]; !ok {
+				watcherPaths[path] = true
+
+				watcher.Add(path)
+
+				common.Debug("AddWatch: %s", path)
+			}
+
+			return nil
+		})
+		if common.Error(err) {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func removeWatcher(path string) {
+	if _, ok := watcherPaths[path]; ok {
+		delete(watcherPaths, path)
+
+		watcher.Remove(path)
+
+		common.Debug("RemoveWatch: %s", path)
+	}
 }

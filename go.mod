@@ -8,6 +8,7 @@ require (
 	github.com/disintegration/imaging v1.6.2
 	github.com/fatih/structs v1.1.0
 	github.com/fogleman/gg v1.3.0
+	github.com/fsnotify/fsnotify v1.4.9
 	github.com/gabriel-vasile/mimetype v1.1.0 // indirect
 	github.com/go-ini/ini v1.57.0 // indirect
 	github.com/go-pg/pg v8.0.6+incompatible
