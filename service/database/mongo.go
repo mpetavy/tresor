@@ -61,5 +61,5 @@ func (db *MongoDB) Start() error {
 }
 
 func (db *MongoDB) Stop() error {
-	return nil
+	return db.Client.Disconnect(nil)
 }

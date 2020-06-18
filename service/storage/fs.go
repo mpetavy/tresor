@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"reflect"
+	"runtime"
 	"strings"
 
 	"github.com/mpetavy/tresor/models"
@@ -62,10 +63,6 @@ type FsVolume struct {
 }
 
 func NewFsVolume(name string, path string) (*FsVolume, error) {
-	if name == UNZIP {
-		return nil, &ErrInvalidVolumeName{name}
-	}
-
 	volume := FsVolume{Name: name, Path: common.CleanPath(path)}
 
 	b, err := common.FileExists(path)
@@ -83,17 +80,29 @@ func NewFsVolume(name string, path string) (*FsVolume, error) {
 func NewFs() (*Fs, error) {
 	fs := &Fs{volumes: make(map[string]*FsVolume), mu: new(sync.Mutex)}
 
-	path, err := common.CreateTempDir()
-	if common.Error(err) {
-		return nil, err
-	}
-
-	fs.AddVolume(&FsVolume{Name: UNZIP, Path: common.CleanPath(path)})
-
 	return fs, nil
 }
 
 func (fs *Fs) Init(cfg *Cfg) error {
+	go func() {
+		for {
+			select {
+			case event, ok := <-watcher.Events:
+				if !ok {
+					break
+				}
+
+				common.Info("Watcher Event: %v", event)
+			case event, ok := <-watcher.Errors:
+				if !ok {
+					break
+				}
+
+				common.Info("Watcher Error: %v", event)
+			}
+		}
+	}()
+
 	for i := 0; i < len(cfg.Volumes); i++ {
 		path := common.CleanPath(cfg.Volumes[i].Path)
 
@@ -141,10 +150,14 @@ func (fs *Fs) Volumes() []string {
 
 func (fs *Fs) AddVolume(v *FsVolume) {
 	fs.volumes[v.Name] = v
+
+	addWatcher(v.Path)
 }
 
 func (fs *Fs) RemoveVolume(v *FsVolume) {
 	delete(fs.volumes, v.Name)
+
+	removeWatcher(v.Path)
 }
 
 func (fs *Fs) CurrentVersion(uid *FsUID) (int, error) {
@@ -178,11 +191,10 @@ func (fs *Fs) find(uid *FsUID, options *Options) (*FsVolume, string, error) {
 	}
 
 	for volume := range fs.volumes {
-		if volume != UNZIP && (!ok || volumeName != volume) {
+		if !ok || volumeName != volume {
 			listVolumes.PushBack(volume)
 		}
 	}
-	listVolumes.PushBack(UNZIP)
 
 	for i := 0; i < listVolumes.Len(); i++ {
 		vn := getFromList(listVolumes, i).(string)
@@ -391,9 +403,7 @@ func (fs *Fs) Delete(suid string, options *Options) error {
 	return nil
 }
 
-func (fs *Fs) rebuildBucket(wg *sync.WaitGroup, uid *FsUID) error {
-	defer wg.Done()
-
+func (fs *Fs) rebuildBucket(uid *FsUID) error {
 	bucket := models.NewBucket()
 	bucket.Uid = uid.String()
 
@@ -456,31 +466,28 @@ func (fs *Fs) Rebuild() (int, error) {
 	}))
 
 	c := 0
-	wg := sync.WaitGroup{}
+	lg := common.NewLimitedGo(runtime.NumCPU())
 
 	for _, volume := range fs.volumes {
-		if volume.Name != UNZIP {
-			err := filepath.Walk(volume.Path, func(path string, info os.FileInfo, err error) error {
-				if !info.IsDir() {
-					c++
-					path = path[len(volume.Path)+1:]
+		err := filepath.Walk(volume.Path, func(path string, info os.FileInfo, err error) error {
+			if !info.IsDir() {
+				c++
+				path = path[len(volume.Path)+1:]
 
-					wg.Add(1)
-					go func() {
-						common.Error(fs.rebuildBucket(&wg, NewFsUID(path)))
-					}()
-				}
-
-				return nil
-			})
-
-			if common.Error(err) {
-				return -1, err
+				lg.Go(func() {
+					common.Error(fs.rebuildBucket(NewFsUID(path)))
+				})
 			}
+
+			return nil
+		})
+
+		if common.Error(err) {
+			return -1, err
 		}
 	}
 
-	wg.Wait()
+	lg.Wait()
 
 	return c, nil
 }

@@ -1,6 +1,6 @@
 {
   "flags": {
-    "log.verbose": "true",
+    "log.verbose": "false",
     "service": "simulate"
   },
   "database": {
@@ -28,7 +28,7 @@
     "volumes": [
       {
         "name": "dicom",
-        "path": "d:/Dicom-Files"
+        "path": "d:/Dicom-Files.big"
       }
     ]
   }
