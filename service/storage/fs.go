@@ -151,7 +151,7 @@ func (fs *Fs) Volumes() []string {
 func (fs *Fs) AddVolume(v *FsVolume) {
 	fs.volumes[v.Name] = v
 
-	addWatcher(v.Path)
+	common.Error(addWatcher(v.Path))
 }
 
 func (fs *Fs) RemoveVolume(v *FsVolume) {
@@ -466,7 +466,7 @@ func (fs *Fs) Rebuild() (int, error) {
 	}))
 
 	c := 0
-	lg := common.NewLimitedGo(runtime.NumCPU())
+	workerChannel := make(chan struct{}, runtime.NumCPU()*5)
 
 	for _, volume := range fs.volumes {
 		err := filepath.Walk(volume.Path, func(path string, info os.FileInfo, err error) error {
@@ -474,9 +474,14 @@ func (fs *Fs) Rebuild() (int, error) {
 				c++
 				path = path[len(volume.Path)+1:]
 
-				lg.Go(func() {
+				workerChannel <- struct{}{}
+				go func() {
+					defer func() {
+						<-workerChannel
+					}()
+
 					common.Error(fs.rebuildBucket(NewFsUID(path)))
-				})
+				}()
 			}
 
 			return nil
@@ -486,8 +491,6 @@ func (fs *Fs) Rebuild() (int, error) {
 			return -1, err
 		}
 	}
-
-	lg.Wait()
 
 	return c, nil
 }
