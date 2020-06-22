@@ -18,7 +18,7 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/labstack/echo/v4 v4.1.16 // indirect
 	github.com/lib/pq v1.7.0
-	github.com/mpetavy/common v1.1.39
+	github.com/mpetavy/common v1.1.40
 	github.com/mpetavy/go-dicom v0.0.0-20200607105844-561ed6d653d4
 	github.com/onsi/ginkgo v1.13.0 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible
@@ -35,4 +35,4 @@ require (
 	software.sslmate.com/src/go-pkcs12 v0.0.0-20200408181440-2981468c0ff3 // indirect
 )
 
-replace github.com/mpetavy/common => ../common
+// replace github.com/mpetavy/common => ../common
