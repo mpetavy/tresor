@@ -14,7 +14,6 @@ type MongoDB struct {
 	URL            string
 	ConnectTimeout int
 	Client         *mongo.Client
-	Ctx            context.Context
 }
 
 func NewMongoDB() (*MongoDB, error) {
@@ -46,13 +45,15 @@ func (db *MongoDB) SQL(sql string) (string, error) {
 func (db *MongoDB) Start() error {
 	var err error
 
-	db.Ctx, _ = context.WithTimeout(context.Background(), time.Duration(db.ConnectTimeout)*time.Millisecond)
-	db.Client, err = mongo.Connect(db.Ctx, options.Client().ApplyURI(db.URL))
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(db.ConnectTimeout)*time.Millisecond)
+	defer cancel()
+
+	db.Client, err = mongo.Connect(ctx, options.Client().ApplyURI(db.URL))
 	if common.Error(err) {
 		return err
 	}
 
-	err = db.Client.Ping(db.Ctx, nil)
+	err = db.Client.Ping(ctx, nil)
 	if common.Error(err) {
 		return err
 	}
