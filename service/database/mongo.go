@@ -29,12 +29,10 @@ func (db *MongoDB) Init(cfg *Cfg) error {
 }
 
 func (db *MongoDB) CreateSchema([]interface{}) error {
-	db.Client.Database(db.Name).Drop(nil)
-
-	return nil
+	return db.Client.Database(db.Name).Drop(nil)
 }
 
-func (db *MongoDB) SwitchIndices(models []interface{}, enable bool) error {
+func (db *MongoDB) EnableIndices(models []interface{}, enable bool) error {
 	return nil
 }
 

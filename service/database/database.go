@@ -38,7 +38,7 @@ type Handle interface {
 	Stop() error
 
 	CreateSchema([]interface{}) error
-	SwitchIndices(models []interface{}, enable bool) error
+	EnableIndices(models []interface{}, enable bool) error
 	SQL(sql string) (string, error)
 
 	SaveBucket(doc *models.Bucket, options *Options) error

@@ -28,7 +28,7 @@
     "volumes": [
       {
         "name": "dicom",
-        "path": "d:/Dicom-Files.big"
+        "path": "d:/Dicom-Files.neu"
       }
     ]
   }
