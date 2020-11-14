@@ -84,25 +84,6 @@ func NewFs() (*Fs, error) {
 }
 
 func (fs *Fs) Init(cfg *Cfg) error {
-	go func() {
-		for {
-			select {
-			case event, ok := <-watcher.Events:
-				if !ok {
-					break
-				}
-
-				common.Info("Watcher Event: %v", event)
-			case event, ok := <-watcher.Errors:
-				if !ok {
-					break
-				}
-
-				common.Info("Watcher Error: %v", event)
-			}
-		}
-	}()
-
 	for i := 0; i < len(cfg.Volumes); i++ {
 		path := common.CleanPath(cfg.Volumes[i].Path)
 
@@ -150,14 +131,10 @@ func (fs *Fs) Volumes() []string {
 
 func (fs *Fs) AddVolume(v *FsVolume) {
 	fs.volumes[v.Name] = v
-
-	common.Error(addWatcher(v.Path))
 }
 
 func (fs *Fs) RemoveVolume(v *FsVolume) {
 	delete(fs.volumes, v.Name)
-
-	removeWatcher(v.Path)
 }
 
 func (fs *Fs) CurrentVersion(uid *FsUID) (int, error) {
@@ -456,13 +433,13 @@ func (fs *Fs) Rebuild() (int, error) {
 	defer cluster.Unlock(cluster.ByStorage())
 
 	err := database.Exec(func(db database.Handle) error {
-		return db.SwitchIndices([]interface{}{models.NewBucket()}, false)
+		return db.EnableIndices([]interface{}{models.NewBucket()}, false)
 	})
 	if common.Error(err) {
 		return -1, err
 	}
 	defer common.Error(database.Exec(func(db database.Handle) error {
-		return db.SwitchIndices([]interface{}{models.NewBucket()}, true)
+		return db.EnableIndices([]interface{}{models.NewBucket()}, true)
 	}))
 
 	c := 0

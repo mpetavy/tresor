@@ -82,7 +82,7 @@ func (db *PgsqlDB) CreateSchema(models []interface{}) error {
 	return nil
 }
 
-func (db *PgsqlDB) SwitchIndices(models []interface{}, enable bool) error {
+func (db *PgsqlDB) EnableIndices(models []interface{}, enable bool) error {
 	for _, model := range models {
 		tableName := structs.Name(model) + "s"
 
