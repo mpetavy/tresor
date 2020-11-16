@@ -16,7 +16,7 @@ type TresorCfg struct {
 	Storage  storage.Cfg  `json:"storage" html:"Storage"`
 }
 
-func InitServices(router *mux.Router) error {
+func StartServices(router *mux.Router) error {
 	cfg := &TresorCfg{}
 
 	err := json.Unmarshal(common.GetConfigurationBuffer(), cfg)

@@ -38,7 +38,7 @@ func start() error {
 	router := mux.NewRouter()
 	http.Handle("/", router)
 
-	err := service.InitServices(router)
+	err := service.StartServices(router)
 	if common.Error(err) {
 		return err
 	}
