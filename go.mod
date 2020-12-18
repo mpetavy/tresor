@@ -8,7 +8,6 @@ require (
 	github.com/disintegration/imaging v1.6.2
 	github.com/fatih/structs v1.1.0
 	github.com/fogleman/gg v1.3.0
-	github.com/fsnotify/fsnotify v1.4.9
 	github.com/gabriel-vasile/mimetype v1.1.0 // indirect
 	github.com/go-ini/ini v1.57.0 // indirect
 	github.com/go-pg/pg v8.0.6+incompatible
@@ -18,7 +17,7 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/labstack/echo/v4 v4.1.16 // indirect
 	github.com/lib/pq v1.7.0
-	github.com/mpetavy/common v1.1.80
+	github.com/mpetavy/common v1.1.81
 	github.com/mpetavy/go-dicom v0.0.0-20200607105844-561ed6d653d4
 	github.com/onsi/ginkgo v1.13.0 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible
