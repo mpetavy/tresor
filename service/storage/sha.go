@@ -116,12 +116,7 @@ func NewShaVolume(name string, path string, flat bool, zip bool) (*ShaVolume, er
 
 	volume := ShaVolume{Name: name, Path: common.CleanPath(path), Flat: flat, Zip: zip}
 
-	b, err := common.FileExists(path)
-	if common.Error(err) {
-		return nil, err
-	}
-
-	if !b {
+	if !common.FileExists(path) {
 		return nil, &common.ErrFileNotFound{path}
 	}
 
@@ -145,12 +140,7 @@ func (sha *Sha) Init(cfg *Cfg) error {
 	for i := 0; i < len(cfg.Volumes); i++ {
 		path := common.CleanPath(cfg.Volumes[i].Path)
 
-		b, err := common.FileExists(path)
-		if common.Error(err) {
-			return err
-		}
-
-		if !b {
+		if !common.FileExists(path) {
 			return &ErrVolumePathNotFound{volume: cfg.Volumes[i].Name, path: path}
 		}
 
@@ -349,10 +339,7 @@ func (sha *Sha) find(uid *ShaUID, options *Options) (*ShaVolume, string, error) 
 			return nil, "", err
 		}
 
-		b, err := common.FileExists(path)
-		if common.Error(err) {
-			return nil, "", err
-		}
+		b := common.FileExists(path)
 
 		if !b && volume.Zip {
 			path, err = createShaPath(volume.Path, uid.withoutObject(), volume.Flat, true)
@@ -360,10 +347,7 @@ func (sha *Sha) find(uid *ShaUID, options *Options) (*ShaVolume, string, error) 
 				return nil, "", err
 			}
 
-			b, err = common.FileExists(path)
-			if common.Error(err) {
-				return nil, "", err
-			}
+			b = common.FileExists(path)
 
 			if b {
 				volume = sha.volumes[UNZIP]
@@ -388,10 +372,7 @@ func (sha *Sha) find(uid *ShaUID, options *Options) (*ShaVolume, string, error) 
 					return nil, "", err
 				}
 
-				b, err = common.FileExists(path)
-				if common.Error(err) {
-					return nil, "", err
-				}
+				b = common.FileExists(path)
 			}
 		}
 
@@ -463,12 +444,7 @@ func (sha *Sha) Store(suid string, source io.Reader, options *Options) (string, 
 		return "", nil, err
 	}
 
-	b, err := common.FileExists(path)
-	if common.Error(err) {
-		return "", nil, err
-	}
-
-	if b {
+	if common.FileExists(path) {
 		sha, err := common.FileSize(path)
 		if common.Error(err) {
 			return "", nil, err

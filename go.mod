@@ -17,7 +17,7 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/labstack/echo/v4 v4.1.16 // indirect
 	github.com/lib/pq v1.7.0
-	github.com/mpetavy/common v1.1.83
+	github.com/mpetavy/common v1.1.84
 	github.com/mpetavy/go-dicom v0.0.0-20200607105844-561ed6d653d4
 	github.com/onsi/ginkgo v1.13.0 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible
@@ -27,7 +27,6 @@ require (
 	golang.org/x/crypto v0.0.0-20200604202706-70a84ac30bf9 // indirect
 	golang.org/x/image v0.0.0-20200609002522-3f4726a040e8
 	golang.org/x/net v0.0.0-20200602114024-627f9648deb9 // indirect
-	golang.org/x/sys v0.0.0-20200610111108-226ff32320da // indirect
 	google.golang.org/genproto v0.0.0-20200610104632-a5b850bcf112 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200605160147-a5ece683394c // indirect
 	mellium.im/sasl v0.2.1 // indirect

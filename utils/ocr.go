@@ -32,8 +32,7 @@ func init() {
 	if err == nil {
 		tdatapath = filepath.Join(filepath.Dir(tpath), "tessdata")
 
-		b, _ := common.FileExists(tdatapath)
-		if !b {
+		if !common.FileExists(tdatapath) {
 			tdatapath = ""
 		}
 	}
