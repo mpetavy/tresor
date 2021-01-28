@@ -65,12 +65,7 @@ type FsVolume struct {
 func NewFsVolume(name string, path string) (*FsVolume, error) {
 	volume := FsVolume{Name: name, Path: common.CleanPath(path)}
 
-	b, err := common.FileExists(path)
-	if common.Error(err) {
-		return nil, err
-	}
-
-	if !b {
+	if !common.FileExists(path) {
 		return nil, &common.ErrFileNotFound{path}
 	}
 
@@ -87,12 +82,7 @@ func (fs *Fs) Init(cfg *Cfg) error {
 	for i := 0; i < len(cfg.Volumes); i++ {
 		path := common.CleanPath(cfg.Volumes[i].Path)
 
-		b, err := common.FileExists(path)
-		if common.Error(err) {
-			return err
-		}
-
-		if !b {
+		if !common.FileExists(path) {
 			return &ErrVolumePathNotFound{volume: cfg.Volumes[i].Name, path: path}
 		}
 
@@ -182,12 +172,7 @@ func (fs *Fs) find(uid *FsUID, options *Options) (*FsVolume, string, error) {
 			return nil, "", err
 		}
 
-		b, err := common.FileExists(path)
-		if common.Error(err) {
-			return nil, "", err
-		}
-
-		if b {
+		if common.FileExists(path) {
 			cache.Put(FS_VOLUME, uid.Path, volume.Name)
 
 			return volume, path, nil
@@ -233,12 +218,7 @@ func (fs *Fs) Store(suid string, source io.Reader, options *Options) (string, *[
 		return "", nil, err
 	}
 
-	b, err := common.FileExists(path)
-	if common.Error(err) {
-		return "", nil, err
-	}
-
-	if b {
+	if common.FileExists(path) {
 		fs, err := common.FileSize(path)
 		if common.Error(err) {
 			return "", nil, err
