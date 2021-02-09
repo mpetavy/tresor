@@ -19,7 +19,12 @@ type TresorCfg struct {
 func StartServices(router *mux.Router) error {
 	cfg := &TresorCfg{}
 
-	err := json.Unmarshal(common.GetConfigurationBuffer(), cfg)
+	ba, err := common.GetConfigurationBuffer()
+	if common.Error(err) {
+		return err
+	}
+
+	err = json.Unmarshal(ba, cfg)
 	if common.Error(err) {
 		return err
 	}
