@@ -313,12 +313,7 @@ func (fs *Fs) Delete(suid string, options *Options) error {
 	cluster.Lock(cluster.ByStorageUid(uid.Path))
 	defer cluster.Unlock(cluster.ByStorageUid(uid.Path))
 
-	b, err := common.IsFile(path)
-	if common.Error(err) {
-		return err
-	}
-
-	if b {
+	if common.IsFile(path) {
 		err := os.Remove(path)
 		if common.Error(err) {
 			return err

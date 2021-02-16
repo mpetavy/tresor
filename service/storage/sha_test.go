@@ -21,7 +21,6 @@ import (
 var count = flag.Int("count", 100, "amount of documents to test with")
 
 func TestMain(m *testing.M) {
-	defer common.Done()
 	flag.Parse()
 	common.Exit(m.Run())
 }
@@ -107,7 +106,10 @@ func TestBasicArchive(t *testing.T) {
 			}
 
 			if v != version {
-				fs.CurrentVersion(uid)
+				_, err = fs.CurrentVersion(uid)
+				if common.Error(err) {
+					t.Fatal(err)
+				}
 			}
 
 			assert.Equal(t, v, version, "Correct version")
@@ -120,7 +122,12 @@ func TestBasicIO(t *testing.T) {
 	if common.Error(err) {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(path)
+	defer func() {
+		err := os.RemoveAll(path)
+		if common.Error(err) {
+			t.Fatal(err)
+		}
+	}()
 
 	fs, err := NewSha()
 	if common.Error(err) {
@@ -166,10 +173,7 @@ func TestBasicIO(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	b, err := common.FileExists(path)
-	if err != nil {
-		t.Fatal(err)
-	}
+	b := common.FileExists(path)
 
 	assert.Equal(t, false, b, "ShaUID with object shall not exist")
 
@@ -178,10 +182,7 @@ func TestBasicIO(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	b, err = common.FileExists(path)
-	if err != nil {
-		t.Fatal(err)
-	}
+	b = common.FileExists(path)
 
 	assert.Equal(t, true, b, "ShaUID without object shall exist")
 
@@ -191,10 +192,7 @@ func TestBasicIO(t *testing.T) {
 	}
 
 	for path != v.Path {
-		b, err = common.FileExists(path)
-		if err != nil {
-			t.Fatal(err)
-		}
+		b = common.FileExists(path)
 
 		assert.Equal(t, false, b, "ShaUID shall not exist")
 
@@ -207,7 +205,12 @@ func TestFilestorage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		err := os.RemoveAll(tempDir)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}()
 
 	t.Logf("test with %d documents", *count)
 
