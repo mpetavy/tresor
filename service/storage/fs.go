@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"github.com/mpetavy/tresor/service/index"
 	"io"
-	"io/ioutil"
 	"reflect"
 	"runtime"
 	"strings"
@@ -334,7 +333,7 @@ func (fs *Fs) Delete(suid string, options *Options) error {
 				break
 			}
 
-			files, err := ioutil.ReadDir(path)
+			files, err := os.ReadDir(path)
 			if common.Error(err) {
 				break
 			}

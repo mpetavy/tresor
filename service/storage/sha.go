@@ -4,7 +4,6 @@ import (
 	"container/list"
 	"encoding/hex"
 	"io"
-	"io/ioutil"
 	"reflect"
 	"strings"
 
@@ -213,7 +212,7 @@ func (sha *Sha) currentVersion(_uid *ShaUID, path string) (int, error) {
 		}
 	}
 
-	files, err := ioutil.ReadDir(path)
+	files, err := os.ReadDir(path)
 	if common.Error(err) {
 		return -1, err
 	}
@@ -560,7 +559,7 @@ func (sha *Sha) Delete(suid string, options *Options) error {
 				break
 			}
 
-			files, err := ioutil.ReadDir(path)
+			files, err := os.ReadDir(path)
 			if common.Error(err) {
 				break
 			}
@@ -595,7 +594,7 @@ func (sha *Sha) rebuildBucket(wg *sync.WaitGroup, uid *ShaUID, version int) {
 	for ; ; page++ {
 		uid.Object = PAGE + "." + strconv.Itoa(page)
 
-		path, h, n, err := sha.Load(uid.String(), ioutil.Discard, nil)
+		path, h, n, err := sha.Load(uid.String(), io.Discard, nil)
 		if common.Error(err) {
 			if page == 1 {
 				common.Error(err)

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"github.com/unidoc/unipdf/v3/extractor"
 	"github.com/unidoc/unipdf/v3/model"
-	"io/ioutil"
 	"os"
 
 	"github.com/mpetavy/tresor/utils"
@@ -109,7 +108,7 @@ func (defaultIndexer *DefaultIndexer) indexDicom(path string, buffer []byte, opt
 							return nil, nil, err
 						}
 
-						err = ioutil.WriteFile(imageFile.Name(), frame, common.DefaultFileMode)
+						err = os.WriteFile(imageFile.Name(), frame, common.DefaultFileMode)
 						if common.Error(err) {
 							return nil, nil, err
 						}
@@ -154,7 +153,7 @@ func (defaultIndexer *DefaultIndexer) Index(path string, options *Options) (stri
 	readComplete := s < 1024*1024
 
 	if readComplete {
-		buffer, err = ioutil.ReadFile(path)
+		buffer, err = os.ReadFile(path)
 	} else {
 		buffer, err = common.ReadHeader(path)
 	}

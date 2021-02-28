@@ -3,7 +3,6 @@ package utils
 import (
 	"fmt"
 	"image"
-	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -39,7 +38,7 @@ func TestOcr(t *testing.T) {
 	dc.DrawStringAnchored(msg, 1648/2, 400, 0.5, 0.5)
 	dc.DrawStringAnchored(msg, 1648/2, 600, 0.5, 0.5)
 
-	f, err := ioutil.TempFile("", "")
+	f, err := os.CreateTemp("", "")
 	if common.Error(err) {
 		t.Fatal(err)
 	}

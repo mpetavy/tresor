@@ -2,6 +2,7 @@ package storage
 
 import (
 	"bytes"
+	"io"
 	"strconv"
 	"testing"
 
@@ -12,7 +13,6 @@ import (
 
 	"encoding/hex"
 	"flag"
-	"io/ioutil"
 
 	"github.com/mpetavy/common"
 	"github.com/stretchr/testify/assert"
@@ -310,10 +310,10 @@ func TestFilestorage(t *testing.T) {
 			for page := 0; page < len(m.hash); page++ {
 				m.uid.Object = PAGE + "." + strconv.Itoa(page)
 
-				_, hash, _, err := fs.Load(m.uid.String(), ioutil.Discard, nil)
+				_, hash, _, err := fs.Load(m.uid.String(), io.Discard, nil)
 
 				if page == deletedPage {
-					_, hash, _, err = fs.Load(m.uid.String(), ioutil.Discard, nil)
+					_, hash, _, err = fs.Load(m.uid.String(), io.Discard, nil)
 					_, ok := err.(*ErrObjectNotFound)
 					assert.True(t, ok, "load on deleted page gave no error")
 				} else {
@@ -370,7 +370,7 @@ loop_id:
 			for page := 1; ; page++ {
 				uid.Object = PAGE + "." + strconv.Itoa(page)
 
-				_, hash, _, err := fs.Load(uid.String(), ioutil.Discard, nil)
+				_, hash, _, err := fs.Load(uid.String(), io.Discard, nil)
 				if err != nil {
 					if page == 1 {
 						break loop_id
