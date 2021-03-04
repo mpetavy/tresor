@@ -136,7 +136,7 @@ func (db *PgsqlDB) SQL(query string) (string, error) {
 		objects = append(objects, object)
 	}
 
-	ba, err := json.MarshalIndent(objects, "", "    ")
+	ba, err := json.MarshalIndent(objects, "", "  ")
 	if common.Error(err) {
 		return "", err
 	}
