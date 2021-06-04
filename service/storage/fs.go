@@ -82,7 +82,7 @@ func (fs *Fs) Init(cfg *Cfg) error {
 		path := common.CleanPath(cfg.Volumes[i].Path)
 
 		if !common.FileExists(path) {
-			return &ErrVolumePathNotFound{volume: cfg.Volumes[i].Name, path: path}
+			return &ErrVolumePathNotFound{Volume: cfg.Volumes[i].Name, Path: path}
 		}
 
 		vol, err := NewFsVolume(cfg.Volumes[i].Name, path)

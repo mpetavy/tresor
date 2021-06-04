@@ -140,7 +140,7 @@ func (sha *Sha) Init(cfg *Cfg) error {
 		path := common.CleanPath(cfg.Volumes[i].Path)
 
 		if !common.FileExists(path) {
-			return &ErrVolumePathNotFound{volume: cfg.Volumes[i].Name, path: path}
+			return &ErrVolumePathNotFound{Volume: cfg.Volumes[i].Name, Path: path}
 		}
 
 		vol, err := NewShaVolume(cfg.Volumes[i].Name, path, cfg.Volumes[i].Flat, cfg.Volumes[i].Zip)
