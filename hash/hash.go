@@ -17,11 +17,11 @@ const (
 )
 
 type ErrUnknownHash struct {
-	algorithmn string
+	Algorithm string
 }
 
 func (e *ErrUnknownHash) Error() string {
-	return fmt.Sprintf("Unknown algorithmn algorithm: %s", e.algorithmn)
+	return fmt.Sprintf("Unknown algorithmn algorithm: %s", e.Algorithm)
 }
 
 func New(alg string) (hash.Hash, error) {
