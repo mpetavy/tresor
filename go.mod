@@ -11,7 +11,7 @@ require (
 	github.com/gorilla/mux v1.7.4
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/lib/pq v1.7.0
-	github.com/mpetavy/common v1.2.38
+	github.com/mpetavy/common v1.2.39
 	github.com/mpetavy/go-dicom v0.0.0-20200607105844-561ed6d653d4
 	github.com/onsi/ginkgo v1.13.0 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible
