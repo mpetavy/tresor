@@ -2,7 +2,6 @@ package utils
 
 import (
 	"bufio"
-	"bytes"
 	"flag"
 	"fmt"
 	"io"
@@ -51,39 +50,24 @@ func processText(imageFile string) (string, error) {
 
 	cmd := exec.Command(*tesseractPath, imageFile, "stdout", "-l", *tesseractLanguage, "--tessdata-dir", *tesseractDataPath)
 
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-
-	err := common.WatchdogCmd(cmd, time.Millisecond*time.Duration(*ocrScanTimeout))
+	ba, err := common.WatchdogCmd(cmd, time.Millisecond*time.Duration(*ocrScanTimeout))
 	if common.Error(err) {
 		return "", err
 	}
 
-	return string(stdout.Bytes()), nil
+	return string(ba), nil
 }
 
 func processOrientation(imageFile string) (Orientation, error) {
 	cmd := exec.Command(*tesseractPath, imageFile, "stdout", "--psm", "0")
 
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-
-	err := common.WatchdogCmd(cmd, time.Millisecond*time.Duration(*ocrOrientationTimeout))
+	ba, err := common.WatchdogCmd(cmd, time.Millisecond*time.Duration(*ocrOrientationTimeout))
 	if common.Error(err) {
 		return ORIENTATION_0, err
 	}
 
 	tags := []string{"Orientation in degrees:", "Orientation:"}
-	s := string(stdout.Bytes())
-	if s == "" {
-		s = string(stderr.Bytes())
-	}
+	s := string(ba)
 
 	var line string
 	var o int
