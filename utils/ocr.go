@@ -50,7 +50,7 @@ func processText(imageFile string) (string, error) {
 
 	cmd := exec.Command(*tesseractPath, imageFile, "stdout", "-l", *tesseractLanguage, "--tessdata-dir", *tesseractDataPath)
 
-	ba, err := common.WatchdogCmd(cmd, time.Millisecond*time.Duration(*ocrScanTimeout))
+	ba, err := common.NewWatchdogCmd(cmd, time.Millisecond*time.Duration(*ocrScanTimeout))
 	if common.Error(err) {
 		return "", err
 	}
@@ -61,7 +61,7 @@ func processText(imageFile string) (string, error) {
 func processOrientation(imageFile string) (Orientation, error) {
 	cmd := exec.Command(*tesseractPath, imageFile, "stdout", "--psm", "0")
 
-	ba, err := common.WatchdogCmd(cmd, time.Millisecond*time.Duration(*ocrOrientationTimeout))
+	ba, err := common.NewWatchdogCmd(cmd, time.Millisecond*time.Duration(*ocrOrientationTimeout))
 	if common.Error(err) {
 		return ORIENTATION_0, err
 	}
