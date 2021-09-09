@@ -19,7 +19,7 @@ type TresorCfg struct {
 func StartServices(router *mux.Router) error {
 	cfg := &TresorCfg{}
 
-	ba, err := common.GetConfigurationBuffer()
+	ba, err := common.LoadConfigurationFile()
 	if common.Error(err) {
 		return err
 	}
