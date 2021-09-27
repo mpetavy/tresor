@@ -13,7 +13,7 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/klauspost/compress v1.13.1 // indirect
 	github.com/lib/pq v1.10.2
-	github.com/mpetavy/common v1.3.13
+	github.com/mpetavy/common v1.3.14
 	github.com/mpetavy/go-dicom v0.0.0-20210302105037-44b79120da96
 	github.com/onsi/ginkgo v1.13.0 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible
