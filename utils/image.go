@@ -101,7 +101,7 @@ func SaveJpeg(source image.Image, filename string) error {
 	}
 
 	defer func() {
-		common.Ignore(f.Close())
+		common.DebugError(f.Close())
 	}()
 
 	return EncodeJpeg(source, f)

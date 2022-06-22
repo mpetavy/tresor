@@ -129,7 +129,7 @@ func (defaultIndexer *DefaultIndexer) indexDicom(path string, buffer []byte, opt
 
 	if imageFile != nil {
 		defer func() {
-			common.Ignore(common.FileDelete(imageFile.Name()))
+			common.DebugError(common.FileDelete(imageFile.Name()))
 		}()
 	}
 
