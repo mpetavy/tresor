@@ -44,11 +44,21 @@ func (db *PgsqlDB) Init(cfg *Cfg) error {
 }
 
 func (db *PgsqlDB) CreateSchema(models []interface{}) error {
+	res, err := db.ORM.Exec("select * from pg_extension where extname='hstore'")
+	if common.Error(err) {
+		return err
+	}
+
+	if res.RowsReturned() == 0 {
+		_, err := db.ORM.Exec("create extension hstore")
+		if common.Error(err) {
+			return err
+		}
+	}
+
 	for _, model := range models {
 		err := db.ORM.DropTable(model, &orm.DropTableOptions{})
-		if common.Error(err) {
-			common.Warn(err.Error())
-		}
+		common.Warn(err.Error())
 
 		err = db.ORM.CreateTable(model, &orm.CreateTableOptions{})
 		if common.Error(err) {

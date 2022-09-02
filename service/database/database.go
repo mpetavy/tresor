@@ -108,14 +108,18 @@ func Init(c *Cfg, router *mux.Router) error {
 	if cfg.Rebuild {
 		common.Info("Create Schema")
 
-		common.Error(Exec(func(handle Handle) error {
+		err := Exec(func(handle Handle) error {
 			err := handle.CreateSchema([]interface{}{&models.User{}, &models.Bucket{}})
 			if common.Error(err) {
 				return err
 			}
 
 			return nil
-		}))
+		})
+
+		if common.Error(err) {
+			return err
+		}
 	}
 
 	return nil
