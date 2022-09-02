@@ -68,7 +68,7 @@ func Init(c *Cfg, router *mux.Router) error {
 		pool <- handle
 	}
 
-	common.Info("Registered database")
+	common.Info("Service database started")
 
 	router.PathPrefix("/db/").Handler(http.StripPrefix("/db/", http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		sql := r.URL.Path

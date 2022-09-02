@@ -13,14 +13,14 @@
       "username": "postgres",
       "password": "postgres",
       "instance": "tresor",
-      "rebuild": true
+      "rebuild": false
     },
   "index": {
     "driver": "default"
   },
   "storage": {
     "driver": "fs",
-    "rebuild": true,
+    "rebuild": false,
     "volumes": [
       {
         "name": "dicom",

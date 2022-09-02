@@ -150,7 +150,7 @@ func Init(c *Cfg, router *mux.Router) error {
 		}))
 	})))
 
-	common.Info("Registered storage")
+	common.Info("Service storage started")
 
 	if cfg.Rebuild {
 		start := time.Now()

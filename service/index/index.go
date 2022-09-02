@@ -50,7 +50,7 @@ func Init(c *Cfg, router *mux.Router) error {
 		pool <- handle
 	}
 
-	common.Info("Registered index")
+	common.Info("Service index started")
 
 	return nil
 }

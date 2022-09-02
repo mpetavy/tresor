@@ -60,6 +60,9 @@ func start() error {
 
 	time.Sleep(time.Millisecond * 500)
 
+	common.Info("")
+	common.Info(fmt.Sprintf("%s on %s ready", common.Title(), *serverAddress))
+
 	return err
 }
 
