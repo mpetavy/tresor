@@ -10,13 +10,15 @@ import (
 //go:generate templater -sr Class=Bucket;class=bucket -i ../service/database/pgsql_class.go -o ../service/database/pgsql_bucket.go
 
 type Bucket struct {
-	Base       `storm:"inline"`
-	Uid        string            `sql:",unique" storm:",unique"`
-	Props      map[string]string `sql:",hstore" sqlx:"gin"`
-	FileNames  []string          `sql:",array" sqlx:"gin"`
-	FileTypes  []string          `sql:",array" sqlx:"gin"`
-	FileSizes  []int64           `sql:",array"`
-	FileHashes []string          `sql:",array"`
+	Base            `storm:"inline"`
+	Uid             string            `sql:",unique" storm:",unique"`
+	Props           map[string]string `sql:",hstore" sqlx:"gin"`
+	FileNames       []string          `sql:",array" sqlx:"gin"`
+	FileMimeTypes   []string          `sql:",array" sqlx:"gin"`
+	FileSizes       []int64           `sql:",array"`
+	FileHashes      []string          `sql:",array"`
+	FileFulltext    []string          `sql:",array"`
+	FileOrientation []int             `sql:",array"`
 }
 
 func NewBucket() Bucket {

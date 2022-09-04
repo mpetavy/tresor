@@ -7,7 +7,6 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -17,7 +16,6 @@ import (
 
 var (
 	tesseractPath         *string
-	tesseractDataPath     *string
 	tesseractLanguage     *string
 	ocrOrientationTimeout *int
 	ocrScanTimeout        *int
@@ -25,30 +23,16 @@ var (
 
 func init() {
 	tpath, err := exec.LookPath("tesseract")
-
-	tdatapath := ""
-
-	if err == nil {
-		tdatapath = filepath.Join(filepath.Dir(tpath), "tessdata")
-
-		if !common.FileExists(tdatapath) {
-			tdatapath = ""
-		}
-	}
+	common.Panic(err)
 
 	tesseractPath = flag.String("tesseract.path", tpath, "Tesseract path")
-	tesseractDataPath = flag.String("tesseract.data.path", tdatapath, "Tesseract data path")
 	tesseractLanguage = flag.String("tesseract.language", "deu", "Tesseract language")
 	ocrOrientationTimeout = flag.Int("ocr.orientation.timeout", 30000, "OCR orientation timeout")
 	ocrScanTimeout = flag.Int("ocr.scan.timeout", 50000, "OCR scan timeout")
 }
 
 func processText(imageFile string) (string, error) {
-	if *tesseractDataPath == "" {
-		return "", fmt.Errorf("tessetact data path not set")
-	}
-
-	cmd := exec.Command(*tesseractPath, imageFile, "stdout", "-l", *tesseractLanguage, "--tessdata-dir", *tesseractDataPath)
+	cmd := exec.Command(*tesseractPath, imageFile, "stdout", "-l", *tesseractLanguage)
 
 	ba, err := common.NewWatchdogCmd(cmd, time.Millisecond*time.Duration(*ocrScanTimeout))
 	if common.Error(err) {

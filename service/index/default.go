@@ -2,6 +2,8 @@ package index
 
 import (
 	"bytes"
+	"fmt"
+	"github.com/dsoprea/go-exif/v3"
 	"github.com/unidoc/unipdf/v3/extractor"
 	"github.com/unidoc/unipdf/v3/model"
 	"os"
@@ -15,6 +17,8 @@ import (
 
 const (
 	DEFAULT_INDEXER = "default"
+	EXIF_PREFIX     = "EXIF"
+	DICOM_PREFIX    = "DCM"
 )
 
 type DefaultIndexer struct {
@@ -40,12 +44,12 @@ func (defaultIndexer *DefaultIndexer) indexPDF(path string, buffer []byte, optio
 	mapping := make(Mapping)
 
 	pdfReader, err := model.NewPdfReader(bytes.NewReader(buffer))
-	if err != nil {
+	if common.Error(err) {
 		return mapping, nil, "", err
 	}
 
 	numPages, err := pdfReader.GetNumPages()
-	if err != nil {
+	if common.Error(err) {
 		return mapping, nil, "", err
 	}
 
@@ -55,17 +59,17 @@ func (defaultIndexer *DefaultIndexer) indexPDF(path string, buffer []byte, optio
 		pageNum := i + 1
 
 		page, err := pdfReader.GetPage(pageNum)
-		if err != nil {
+		if common.Error(err) {
 			return mapping, nil, "", err
 		}
 
 		ex, err := extractor.New(page)
-		if err != nil {
+		if common.Error(err) {
 			return mapping, nil, "", err
 		}
 
 		text, err := ex.ExtractText()
-		if err != nil {
+		if common.Error(err) {
 			return mapping, nil, "", err
 		}
 
@@ -73,6 +77,25 @@ func (defaultIndexer *DefaultIndexer) indexPDF(path string, buffer []byte, optio
 	}
 
 	return mapping, nil, strbuf.String(), err
+}
+
+func (defaultIndexer *DefaultIndexer) indexExif(path string, buffer []byte, options *Options) (Mapping, []byte, error) {
+	exifData, err := exif.SearchAndExtractExif(buffer)
+	if common.Error(err) {
+		return nil, nil, err
+	}
+
+	exifTags, _, err := exif.GetFlatExifData(exifData, &exif.ScanOptions{})
+	if common.Error(err) {
+		return nil, nil, err
+	}
+
+	mapping := make(Mapping)
+	for _, tag := range exifTags {
+		mapping[fmt.Sprintf("%s.%s", EXIF_PREFIX, tag.TagName)] = tag.Formatted
+	}
+
+	return mapping, nil, err
 }
 
 func (defaultIndexer *DefaultIndexer) indexDicom(path string, buffer []byte, options *Options) (Mapping, []byte, error) {
@@ -84,52 +107,59 @@ func (defaultIndexer *DefaultIndexer) indexDicom(path string, buffer []byte, opt
 
 	if len(buffer) > 0 {
 		dataset, err = dicom.ReadDataSetInBytes(buffer, dicom.ReadOptions{})
+		if common.Error(err) {
+			return nil, nil, err
+		}
 	} else {
 		dataset, err = dicom.ReadDataSetFromFile(path, dicom.ReadOptions{})
+		if common.Error(err) {
+			return nil, nil, err
+		}
 	}
 
+	var representativeFrameNumber uint16
+
+	elem, err := dataset.FindElementByTag(dicomtag.RepresentativeFrameNumber)
 	if err == nil {
-		var representativeFrameNumber uint16
-
-		elem, err := dataset.FindElementByTag(dicomtag.RepresentativeFrameNumber)
-		if err == nil {
-			representativeFrameNumber, err = elem.GetUInt16()
+		representativeFrameNumber, err = elem.GetUInt16()
+		if common.Error(err) {
+			return nil, nil, err
 		}
+	}
 
-		for _, elem := range dataset.Elements {
-			if elem.Tag == dicomtag.PixelData {
-				data := elem.Value[0].(dicom.PixelDataInfo)
-				for i, frame := range data.Frames {
-					if uint16(i) == representativeFrameNumber {
-						var err error
+	for _, elem := range dataset.Elements {
+		if elem.Tag == dicomtag.PixelData {
+			data := elem.Value[0].(dicom.PixelDataInfo)
+			for i, frame := range data.Frames {
+				if uint16(i) == representativeFrameNumber {
+					var err error
 
-						imageFile, err = common.CreateTempFile()
-						if common.Error(err) {
-							return nil, nil, err
-						}
-
-						err = os.WriteFile(imageFile.Name(), frame, common.DefaultFileMode)
-						if common.Error(err) {
-							return nil, nil, err
-						}
-
-						break
+					imageFile, err = common.CreateTempFile()
+					if common.Error(err) {
+						return nil, nil, err
 					}
+
+					err = os.WriteFile(imageFile.Name(), frame, common.DefaultFileMode)
+					if common.Error(err) {
+						return nil, nil, err
+					}
+
+					break
 				}
 			}
-			v, err := elem.GetString()
+		}
+		v, err := elem.GetString()
+		if err == nil {
+			tn, err := dicomtag.FindTagInfo(elem.Tag)
 			if err == nil {
-				tn, err := dicomtag.FindTagInfo(elem.Tag)
-				if err == nil {
-					mapping[tn.Name] = v
-				}
+				mapping[fmt.Sprint("%s.%s", DICOM_PREFIX, tn.Name)] = v
 			}
 		}
 	}
 
 	if imageFile != nil {
 		defer func() {
-			common.DebugError(common.FileDelete(imageFile.Name()))
+			common.Error(common.FileDelete(imageFile.Name()))
 		}()
 	}
 
@@ -167,17 +197,20 @@ func (defaultIndexer *DefaultIndexer) Index(path string, options *Options) (stri
 		buffer = buffer[0:0]
 	}
 
-	if common.IsImageMimeType(mimeType) {
-		fulltext, orientation, err = utils.Ocr(path)
-		if common.Error(err) {
-			return mimeType, mapping, thumbnail, fulltext, orientation, err
-		}
-	} else {
-		switch mimeType {
-		case common.MimetypeApplicationPdf.MimeType:
-			mapping, thumbnail, fulltext, err = defaultIndexer.indexPDF(path, buffer, options)
-		case common.MimetypeApplicationDicom.MimeType:
-			mapping, thumbnail, err = defaultIndexer.indexDicom(path, buffer, options)
+	switch mimeType {
+	case common.MimetypeApplicationPdf.MimeType:
+		mapping, thumbnail, fulltext, err = defaultIndexer.indexPDF(path, buffer, options)
+	case common.MimetypeApplicationDicom.MimeType:
+		mapping, thumbnail, err = defaultIndexer.indexDicom(path, buffer, options)
+	default:
+		if common.IsImageMimeType(mimeType) {
+			if mimeType == common.MimetypeImageJpeg.MimeType || mimeType == common.MimetypeImageTiff.MimeType {
+				mapping, thumbnail, err = defaultIndexer.indexExif(path, buffer, options)
+				common.DebugError(err)
+			}
+
+			fulltext, orientation, err = utils.Ocr(path)
+			common.DebugError(err)
 		}
 	}
 

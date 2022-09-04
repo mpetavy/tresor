@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"container/list"
 	"encoding/hex"
+	"fmt"
 	"github.com/mpetavy/tresor/service/index"
+	"github.com/mpetavy/tresor/utils"
 	"io"
 	"reflect"
-	"runtime"
 	"strings"
 
 	"github.com/mpetavy/tresor/models"
@@ -370,19 +371,24 @@ func (fs *Fs) rebuildBucket(uid *FsUID) error {
 
 	var mimeType string
 	var mapping index.Mapping
+	var fulltext string
+	var orientation utils.Orientation
 
 	err = index.Exec(func(index index.Handle) error {
-		mimeType, mapping, _, _, _, err = index.Index(path, nil)
+		mimeType, mapping, _, fulltext, orientation, err = index.Index(path, nil)
+		if common.Error(err) {
+			return err
+		}
 
-		return err
+		return nil
 	})
 	if common.Error(err) {
 		return err
 	}
 
-	if len(mimeType) > 0 {
-		bucket.FileTypes = append(bucket.FileTypes, mimeType)
-	}
+	bucket.FileMimeTypes = append(bucket.FileMimeTypes, mimeType)
+	bucket.FileFulltext = append(bucket.FileFulltext, fulltext)
+	bucket.FileOrientation = append(bucket.FileOrientation, int(orientation))
 
 	for k, v := range mapping {
 		bucket.Props[k] = v
@@ -416,23 +422,24 @@ func (fs *Fs) Rebuild() (int, error) {
 		return db.EnableIndices([]interface{}{models.NewBucket()}, true)
 	}))
 
+	wg := sync.WaitGroup{}
 	c := 0
-	workerChannel := make(chan struct{}, runtime.NumCPU()*5)
-
 	for _, volume := range fs.volumes {
 		err := filepath.Walk(volume.Path, func(path string, info os.FileInfo, err error) error {
 			if !info.IsDir() {
 				c++
 				path = path[len(volume.Path)+1:]
 
-				workerChannel <- struct{}{}
-				go func() {
+				wg.Add(1)
+				go func(path string) {
 					defer func() {
-						<-workerChannel
+						wg.Done()
 					}()
 
+					fmt.Printf("%s\n", path)
+
 					common.Error(fs.rebuildBucket(NewFsUID(path)))
-				}()
+				}(path)
 			}
 
 			return nil
@@ -442,6 +449,8 @@ func (fs *Fs) Rebuild() (int, error) {
 			return -1, err
 		}
 	}
+
+	wg.Wait()
 
 	return c, nil
 }

@@ -633,7 +633,7 @@ func (sha *Sha) rebuildBucket(wg *sync.WaitGroup, uid *ShaUID, version int) {
 
 	for i := 1; i < page; i++ {
 		ir := mapIndex[i]
-		bucket.FileTypes = append(bucket.FileTypes, ir.MimeType)
+		bucket.FileMimeTypes = append(bucket.FileMimeTypes, ir.MimeType)
 	}
 
 	err := database.Exec(func(db database.Handle) error {

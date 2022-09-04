@@ -13,18 +13,22 @@
       "username": "postgres",
       "password": "postgres",
       "instance": "tresor",
-      "rebuild": false
+      "rebuild": true
     },
   "index": {
     "driver": "default"
   },
   "storage": {
     "driver": "fs",
-    "rebuild": false,
+    "rebuild": true,
     "volumes": [
       {
         "name": "dicom",
         "path": "/mnt/freenas/Dicom-Files.1000"
+      },
+      {
+        "name": "jpeg",
+        "path": "/mnt/freenas/Sample-Jpegs"
       }
     ]
   }

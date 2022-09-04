@@ -5,6 +5,8 @@ go 1.16
 require (
 	github.com/chai2010/tiff v0.0.0-20200705094435-2b8a7f42fe29
 	github.com/disintegration/imaging v1.6.2
+	github.com/dsoprea/go-exif/v3 v3.0.0-20210625224831-a6301f85c82b
+	github.com/dsoprea/go-logging v0.0.0-20200710184922-b02d349568dd // indirect
 	github.com/fatih/structs v1.1.0
 	github.com/fogleman/gg v1.3.0
 	github.com/go-pg/pg v8.0.7+incompatible
