@@ -15,8 +15,9 @@ import (
 // https://github.com/creamdog/gonfig
 // https://github.com/sadlil/go-trigger
 
-// Http service
-// PDF indexer
+// Using generics for database models
+// tesseract OCR with word coordinates
+// thumbnail generation into DB
 
 var (
 	serverAddress      *string

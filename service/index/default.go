@@ -92,6 +92,10 @@ func (defaultIndexer *DefaultIndexer) indexExif(path string, buffer []byte, opti
 
 	mapping := make(Mapping)
 	for _, tag := range exifTags {
+		if tag.Formatted == "" {
+			continue
+		}
+
 		mapping[fmt.Sprintf("%s.%s", EXIF_PREFIX, tag.TagName)] = tag.Formatted
 	}
 
@@ -151,7 +155,7 @@ func (defaultIndexer *DefaultIndexer) indexDicom(path string, buffer []byte, opt
 		v, err := elem.GetString()
 		if err == nil {
 			tn, err := dicomtag.FindTagInfo(elem.Tag)
-			if err == nil {
+			if err == nil && v != "" {
 				mapping[fmt.Sprint("%s.%s", DICOM_PREFIX, tn.Name)] = v
 			}
 		}
