@@ -128,7 +128,7 @@ func Init(c *Cfg, router *mux.Router) error {
 func Close() {
 	close(pool)
 	for handle := range pool {
-		common.Error(handle.Start())
+		common.Error(handle.Stop())
 	}
 
 	common.Info("Service database stopped")
