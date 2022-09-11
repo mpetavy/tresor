@@ -47,7 +47,7 @@ func processOrientation(imageFile string) (Orientation, error) {
 
 	ba, err := common.NewWatchdogCmd(cmd, time.Millisecond*time.Duration(*ocrOrientationTimeout))
 	if common.Error(err) {
-		return ORIENTATION_0, err
+		return ORIENTATION_0, fmt.Errorf("cannot find orientation")
 	}
 
 	tags := []string{"Orientation in degrees:", "Orientation:"}
@@ -94,9 +94,8 @@ func processOrientation(imageFile string) (Orientation, error) {
 
 func Ocr(imageFile string) (string, Orientation, error) {
 	orientation, err := processOrientation(imageFile)
-
-	if common.Error(err) {
-		return "", -1, err
+	if err != nil {
+		return "", -1, nil
 	}
 
 	if orientation != 0 {
@@ -123,6 +122,10 @@ func Ocr(imageFile string) (string, Orientation, error) {
 		if common.Error(err) {
 			return "", -1, err
 		}
+
+		defer func() {
+			common.Error(common.FileDelete(tmpFile.Name()))
+		}()
 
 		err = SaveJpeg(tmpImage, tmpFile.Name())
 		if common.Error(err) {

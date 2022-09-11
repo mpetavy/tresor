@@ -81,7 +81,7 @@ func (defaultIndexer *DefaultIndexer) indexPDF(path string, buffer []byte, optio
 
 func (defaultIndexer *DefaultIndexer) indexExif(path string, buffer []byte, options *Options) (Mapping, []byte, error) {
 	exifData, err := exif.SearchAndExtractExif(buffer)
-	if common.Error(err) {
+	if common.Warn(err) {
 		return nil, nil, err
 	}
 
@@ -107,14 +107,17 @@ func (defaultIndexer *DefaultIndexer) indexDicom(path string, buffer []byte, opt
 
 	var imageFile *os.File
 	var dataset *dicom.DataSet
-	var err error
 
 	if len(buffer) > 0 {
+		var err error
+
 		dataset, err = dicom.ReadDataSetInBytes(buffer, dicom.ReadOptions{})
 		if common.Error(err) {
 			return nil, nil, err
 		}
 	} else {
+		var err error
+
 		dataset, err = dicom.ReadDataSetFromFile(path, dicom.ReadOptions{})
 		if common.Error(err) {
 			return nil, nil, err
@@ -126,7 +129,7 @@ func (defaultIndexer *DefaultIndexer) indexDicom(path string, buffer []byte, opt
 	elem, err := dataset.FindElementByTag(dicomtag.RepresentativeFrameNumber)
 	if err == nil {
 		representativeFrameNumber, err = elem.GetUInt16()
-		if common.Error(err) {
+		if common.Warn(err) {
 			return nil, nil, err
 		}
 	}
@@ -167,7 +170,7 @@ func (defaultIndexer *DefaultIndexer) indexDicom(path string, buffer []byte, opt
 		}()
 	}
 
-	return mapping, nil, err
+	return mapping, nil, nil
 }
 
 func (defaultIndexer *DefaultIndexer) Index(path string, options *Options) (string, Mapping, []byte, string, utils.Orientation, error) {
