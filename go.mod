@@ -11,7 +11,7 @@ require (
 	github.com/go-pg/pg v8.0.7+incompatible
 	github.com/gorilla/mux v1.8.0
 	github.com/lib/pq v1.10.2
-	github.com/mpetavy/common v1.4.42
+	github.com/mpetavy/common v1.4.43
 	github.com/mpetavy/go-dicom v0.0.0-20210302105037-44b79120da96
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/stretchr/testify v1.7.0
@@ -75,6 +75,7 @@ require (
 	go.bug.st/serial v1.3.1 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/crypto v0.0.0-20220926161630-eccd6366d1be // indirect
+	golang.org/x/exp v0.0.0-20221006183845-316c7553db56 // indirect
 	golang.org/x/net v0.0.0-20220930213112-107f3e3c3b0b // indirect
 	golang.org/x/oauth2 v0.0.0-20210628180205-a41e5a781914 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
