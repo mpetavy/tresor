@@ -58,7 +58,7 @@ func (db *PgsqlDB) CreateSchema(models []interface{}) error {
 
 	for _, model := range models {
 		err := db.ORM.DropTable(model, &orm.DropTableOptions{})
-		common.Warn(err)
+		common.WarnError(err)
 
 		err = db.ORM.CreateTable(model, &orm.CreateTableOptions{})
 		if common.Error(err) {
