@@ -11,7 +11,7 @@ require (
 	github.com/go-pg/pg v8.0.7+incompatible
 	github.com/gorilla/mux v1.8.0
 	github.com/lib/pq v1.10.2
-	github.com/mpetavy/common v1.5.13
+	github.com/mpetavy/common v1.5.14
 	github.com/mpetavy/go-dicom v0.0.0-20210302105037-44b79120da96
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/stretchr/testify v1.7.0
