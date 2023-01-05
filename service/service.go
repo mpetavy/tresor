@@ -51,8 +51,8 @@ func StopServices() error {
 	common.DebugFunc()
 
 	storage.Close()
-	database.Close()
 	index.Close()
+	database.Close()
 
 	return nil
 }
