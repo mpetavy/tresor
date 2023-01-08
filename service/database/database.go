@@ -1,12 +1,18 @@
 package database
 
 import (
+	"bytes"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/mpetavy/common"
 	"github.com/mpetavy/tresor/cache"
 	"github.com/mpetavy/tresor/models"
 	"github.com/mpetavy/tresor/service/errors"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
+	"text/template"
 )
 
 //go:generate
@@ -100,7 +106,6 @@ func Init(c *Cfg, router *mux.Router) error {
 			}))
 		}
 
-		//rw.Header().Add("Content-type", "application/json")
 		_, err := rw.Write(ba)
 		common.Error(err)
 	})))
@@ -125,7 +130,102 @@ func Init(c *Cfg, router *mux.Router) error {
 	return nil
 }
 
+func createModel(modelPath string, modelFileInfo os.FileInfo) error {
+	type data struct {
+		Type string
+		Name string
+	}
+
+	var d data
+
+	if modelFileInfo.IsDir() || filepath.Base(modelPath) == "base.go" || filepath.Base(modelPath) == "class.go" {
+		return nil
+	}
+
+	databasePath := common.CleanPath(filepath.Join(filepath.Dir(modelPath), "..", "service", "database"))
+
+	model := common.FileNamePart(filepath.Base(modelPath))
+
+	for _, typ := range []string{"mongo", "pgsql"} {
+		outputFile := filepath.Join(databasePath, fmt.Sprintf("%s_%s.go", typ, model))
+
+		if !common.FileExists(outputFile) {
+			return &common.ErrFileNotFound{
+				FileName: outputFile,
+			}
+		}
+
+		b, err := os.ReadFile(filepath.Join(databasePath, fmt.Sprintf("%s_class.go", typ)))
+		if err != nil {
+			return err
+		}
+
+		t := template.Must(template.New(".").Parse(string(b)))
+
+		var buf bytes.Buffer
+
+		err = t.Execute(&buf, d)
+		if err != nil {
+			return err
+		}
+
+		code := string(buf.Bytes())
+
+		for i := 5; i > 1; i-- {
+			code = strings.Replace(code, "    ", "\t", -1)
+		}
+
+		searchReplaces := []struct {
+			search  string
+			reaplce string
+		}{
+			{
+				search:  "Class",
+				reaplce: common.Capitalize(model),
+			},
+			{
+				search:  "class",
+				reaplce: model,
+			},
+		}
+
+		for _, v := range searchReplaces {
+			search := v.search
+			replace := v.reaplce
+
+			code = strings.Replace(code, search, replace, -1)
+		}
+
+		err = os.WriteFile(common.CleanPath(outputFile), []byte(code), common.DefaultFileMode)
+		if common.Error(err) {
+			return err
+		}
+	}
+
+	return nil
+
+}
+
+func Codegen() error {
+	fw, err := common.NewFilewalker(filepath.Join("models", "*.go"), false, false, createModel)
+
+	if common.Error(err) {
+		return err
+	}
+
+	err = fw.Run()
+	if common.Error(err) {
+		return err
+	}
+
+	return nil
+}
+
 func Close() {
+	if pool == nil {
+		return
+	}
+
 	close(pool)
 	for handle := range pool {
 		common.Error(handle.Stop())

@@ -56,6 +56,10 @@ func Init(c *Cfg, router *mux.Router) error {
 }
 
 func Close() {
+	if pool == nil {
+		return
+	}
+
 	close(pool)
 	for handle := range pool {
 		common.Error(handle.Stop())
