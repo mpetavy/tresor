@@ -607,6 +607,8 @@ func (sha *Sha) rebuildBucket(wg *sync.WaitGroup, uid *ShaUID, version int) {
 
 		wgIndex.Add(1)
 		go func(page int, path string) {
+			defer common.UnregisterGoRoutine(common.RegisterGoRoutine(1))
+
 			ir := index.IndexResult{}
 
 			err = index.Exec(func(index index.Handle) error {
@@ -670,7 +672,11 @@ loop_id:
 			c++
 
 			wg.Add(1)
-			go sha.rebuildBucket(&wg, uid, version)
+			go func() {
+				defer common.UnregisterGoRoutine(common.RegisterGoRoutine(1))
+
+				sha.rebuildBucket(&wg, uid, version)
+			}()
 		}
 	}
 

@@ -432,6 +432,8 @@ func (fs *Fs) Rebuild() (int, error) {
 
 				wg.Add(1)
 				go func(path string) {
+					defer common.UnregisterGoRoutine(common.RegisterGoRoutine(1))
+
 					defer func() {
 						wg.Done()
 					}()

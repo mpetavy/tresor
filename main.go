@@ -75,6 +75,8 @@ func start() error {
 	router.PathPrefix(pathPrefix).Handler(http.StripPrefix(pathPrefix, http.FileServer(http.Dir("./static"))))
 
 	go func(err *error) {
+		defer common.UnregisterGoRoutine(common.RegisterGoRoutine(1))
+
 		*err = server.ListenAndServe()
 	}(&err)
 

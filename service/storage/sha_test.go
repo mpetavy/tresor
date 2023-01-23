@@ -254,6 +254,8 @@ func TestFilestorage(t *testing.T) {
 	for i := 0; i < *count; i++ {
 		wg.Add(1)
 		go func() {
+			defer common.UnregisterGoRoutine(common.RegisterGoRoutine(1))
+
 			defer wg.Done()
 
 			var m maker
@@ -296,6 +298,8 @@ func TestFilestorage(t *testing.T) {
 	for m := range uidsChan {
 		wg.Add(1)
 		go func(m maker) {
+			defer common.UnregisterGoRoutine(common.RegisterGoRoutine(1))
+
 			defer wg.Done()
 
 			deletedPage := common.Rnd(len(m.hash))
