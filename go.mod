@@ -11,7 +11,7 @@ require (
 	github.com/go-pg/pg v8.0.7+incompatible
 	github.com/gorilla/mux v1.8.0
 	github.com/lib/pq v1.10.2
-	github.com/mpetavy/common v1.5.20
+	github.com/mpetavy/common v1.5.21
 	github.com/mpetavy/go-dicom v0.0.0-20210302105037-44b79120da96
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/stretchr/testify v1.8.1
@@ -25,12 +25,16 @@ require (
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/creack/goselect v0.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/dlclark/regexp2 v1.7.0 // indirect
+	github.com/dop251/goja v0.0.0-20230119130012-17fd568758fe // indirect
+	github.com/dop251/goja_nodejs v0.0.0-20211022123610-8dd9abb0616d // indirect
 	github.com/dsoprea/go-logging v0.0.0-20200710184922-b02d349568dd // indirect
 	github.com/dsoprea/go-utility/v2 v2.0.0-20200717064901-2fccff4aa15e // indirect
 	github.com/fatih/structtag v1.2.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.3.1 // indirect
 	github.com/go-errors/errors v1.1.1 // indirect
 	github.com/go-ini/ini v1.62.0 // indirect
+	github.com/go-sourcemap/sourcemap v2.1.3+incompatible // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
