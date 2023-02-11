@@ -17,7 +17,6 @@ const (
 )
 
 func TestMain(m *testing.M) {
-	defer common.Done()
 	common.Exit(m.Run())
 }
 

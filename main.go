@@ -98,7 +98,5 @@ func stop() error {
 }
 
 func main() {
-	defer common.Done()
-
 	common.Run(nil)
 }
