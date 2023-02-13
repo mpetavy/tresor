@@ -31,7 +31,7 @@ var (
 )
 
 func init() {
-	common.Init("0.0.1", "", "", "2018", "archive solution", "mpetavy", fmt.Sprintf("https://github.com/mpetavy/%s", common.Title()), common.GPL2, nil, start, stop, run, 0)
+	common.Init("tresor", "0.0.1", "", "", "2018", "archive solution", "mpetavy", fmt.Sprintf("https://github.com/mpetavy/%s", common.Title()), common.GPL2, nil, start, stop, run, 0)
 
 	serverAddress = flag.String("serverport", ":8100", "Server address:port")
 	serverReadTimeout = flag.Int("serverreadtimeout", 5000, "Server READ timeout")
