@@ -72,7 +72,7 @@ func start() error {
 		*err = server.ListenAndServe()
 	}(&err)
 
-	time.Sleep(time.Millisecond * 500)
+	common.Sleep(time.Millisecond * 500)
 
 	common.Info(fmt.Sprintf("%s on %s ready", common.Title(), *serverAddress))
 
