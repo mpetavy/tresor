@@ -1,6 +1,6 @@
 module github.com/mpetavy/tresor
 
-go 1.20
+go 1.19
 
 require (
 	github.com/chai2010/tiff v0.0.0-20200705094435-2b8a7f42fe29
@@ -11,7 +11,7 @@ require (
 	github.com/go-pg/pg v8.0.7+incompatible
 	github.com/gorilla/mux v1.8.0
 	github.com/lib/pq v1.10.2
-	github.com/mpetavy/common v1.5.51
+	github.com/mpetavy/common v1.5.52
 	github.com/mpetavy/go-dicom v0.0.0-20210302105037-44b79120da96
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/stretchr/testify v1.8.1
