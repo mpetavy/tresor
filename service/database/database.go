@@ -207,13 +207,8 @@ func createModel(modelPath string, modelFileInfo os.FileInfo) error {
 }
 
 func Codegen() error {
-	fw, err := common.NewFilewalker(filepath.Join("models", "*.go"), false, false, createModel)
+	err := common.WalkFiles(filepath.Join("models", "*.go"), false, false, createModel)
 
-	if common.Error(err) {
-		return err
-	}
-
-	err = fw.Run()
 	if common.Error(err) {
 		return err
 	}
