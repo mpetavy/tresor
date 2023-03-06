@@ -17,7 +17,7 @@ require (
 	github.com/stretchr/testify v1.8.1
 	github.com/unidoc/unipdf/v3 v3.26.1
 	go.mongodb.org/mongo-driver v1.7.0
-	golang.org/x/image v0.0.0-20210628002857-a66eb6448b8d
+	golang.org/x/image v0.5.0
 )
 
 require (
@@ -84,9 +84,9 @@ require (
 	golang.org/x/exp v0.0.0-20221006183845-316c7553db56 // indirect
 	golang.org/x/net v0.0.0-20220930213112-107f3e3c3b0b // indirect
 	golang.org/x/oauth2 v0.0.0-20210628180205-a41e5a781914 // indirect
-	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
+	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
 	golang.org/x/sys v0.5.0 // indirect
-	golang.org/x/text v0.4.0 // indirect
+	golang.org/x/text v0.7.0 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/api v0.51.0 // indirect
