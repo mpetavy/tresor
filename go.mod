@@ -11,7 +11,7 @@ require (
 	github.com/go-pg/pg v8.0.7+incompatible
 	github.com/gorilla/mux v1.8.0
 	github.com/lib/pq v1.10.2
-	github.com/mpetavy/common v1.5.64
+	github.com/mpetavy/common v1.5.65
 	github.com/mpetavy/go-dicom v0.0.0-20210302105037-44b79120da96
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/stretchr/testify v1.8.1
@@ -35,6 +35,7 @@ require (
 	github.com/go-errors/errors v1.1.1 // indirect
 	github.com/go-ini/ini v1.62.0 // indirect
 	github.com/go-sourcemap/sourcemap v2.1.3+incompatible // indirect
+	github.com/go-sql-driver/mysql v1.4.0 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
