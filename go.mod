@@ -11,7 +11,7 @@ require (
 	github.com/go-pg/pg v8.0.7+incompatible
 	github.com/gorilla/mux v1.8.0
 	github.com/lib/pq v1.10.2
-	github.com/mpetavy/common v1.5.65
+	github.com/mpetavy/common v1.5.66
 	github.com/mpetavy/go-dicom v0.0.0-20210302105037-44b79120da96
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/stretchr/testify v1.8.1
@@ -61,6 +61,7 @@ require (
 	github.com/labstack/gommon v0.3.1 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
+	github.com/ompluscator/dynamic-struct v1.4.0 // indirect
 	github.com/onsi/ginkgo v1.13.0 // indirect
 	github.com/onsi/gomega v1.10.1 // indirect
 	github.com/paulrosania/go-charset v0.0.0-20190326053356-55c9d7a5834c // indirect
