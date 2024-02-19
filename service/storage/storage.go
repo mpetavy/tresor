@@ -96,9 +96,12 @@ func Init(c *Cfg, router *mux.Router) error {
 
 			ba = buf.Bytes()
 
-			mimeType := common.DetectMimeType("", ba).MimeType
+			mt, err := common.DetectMimeType("", ba)
+			if common.Error(err) {
+				return err
+			}
 
-			if mimeType == common.MimetypeApplicationDicom.MimeType {
+			if mt.MimeType == common.MimetypeApplicationDicom.MimeType {
 				dcm, err := dicom.ReadDataSetInBytes(buf.Bytes(), dicom.ReadOptions{DropPixelData: false})
 				if common.Error(err) {
 					return err
@@ -109,7 +112,10 @@ func Init(c *Cfg, router *mux.Router) error {
 						data := elem.Value[0].(dicom.PixelDataInfo)
 						ba = data.Frames[0]
 
-						mimeType = common.DetectMimeType("", ba).MimeType
+						mt, err = common.DetectMimeType("", ba)
+						if common.Error(err) {
+							return err
+						}
 
 						break
 					}
@@ -117,17 +123,17 @@ func Init(c *Cfg, router *mux.Router) error {
 			}
 
 			if ba == nil {
-				return fmt.Errorf("cannot handle content with mimeType %s", mimeType)
+				return fmt.Errorf("cannot handle content with mimeType %s", mt.MimeType)
 			}
 
-			if common.IsImageMimeType(mimeType) {
-				if mimeType != common.MimetypeImageJpeg.MimeType {
+			if common.IsImageMimeType(mt.MimeType) {
+				if mt.MimeType != common.MimetypeImageJpeg.MimeType {
 					img, err := utils.LoadImage(ba)
 					if common.Error(err) {
 						return err
 					}
 
-					if mimeType != common.MimetypeImageJpeg.MimeType {
+					if mt.MimeType != common.MimetypeImageJpeg.MimeType {
 						err = jpeg.Encode(&buf, img, &jpeg.Options{80})
 						if common.Error(err) {
 							return err
