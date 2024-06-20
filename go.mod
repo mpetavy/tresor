@@ -13,10 +13,10 @@ require (
 	github.com/go-pg/pg v8.0.7+incompatible
 	github.com/gorilla/mux v1.8.0
 	github.com/lib/pq v1.10.9
-	github.com/mpetavy/common v1.8.5
+	github.com/mpetavy/common v1.8.6
 	github.com/mpetavy/go-dicom v0.0.0-20230223204403-807ccc095cae
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.9.0
 	github.com/unidoc/unipdf/v3 v3.45.0
 	go.mongodb.org/mongo-driver v1.11.6
 	golang.org/x/image v0.7.0
