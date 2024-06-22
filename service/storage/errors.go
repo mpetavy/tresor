@@ -44,7 +44,7 @@ type ErrObjectAlreadyExists struct {
 }
 
 func (e *ErrObjectAlreadyExists) Error() string {
-	uid := common.Eval(e.Uid != "", func() interface{} { return e.Uid }, "??")
+	uid := common.Eval(e.Uid != "", e.Uid, "??")
 	return fmt.Sprintf("Object already exists: ShaVolume %s, Value %v", e.Volume, uid)
 }
 
@@ -54,6 +54,6 @@ type ErrObjectNotFound struct {
 }
 
 func (e *ErrObjectNotFound) Error() string {
-	uid := common.Eval(e.Uid != "", func() interface{} { return e.Uid }, "??")
+	uid := common.Eval(e.Uid != "", e.Uid, "??")
 	return fmt.Sprintf("Object not found: ShaVolume %s, Value %v", e.Volume, uid)
 }

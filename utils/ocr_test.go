@@ -21,7 +21,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestOcr(t *testing.T) {
-	font := common.Eval(common.IsLinuxOS(), "/usr/share/fonts/TTF/DejaVuSans.ttf", "c:/windows/fonts/Arial.ttf").(string)
+	font := common.Eval(common.IsLinuxOS(), "/usr/share/fonts/TTF/DejaVuSans.ttf", "c:/windows/fonts/Arial.ttf")
 
 	img := image.NewRGBA(image.Rect(0, 0, 1648, 2338))
 
