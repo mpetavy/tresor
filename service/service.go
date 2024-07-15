@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/json"
 	"github.com/gorilla/mux"
 	"github.com/mpetavy/common"
 	"github.com/mpetavy/tresor/service/database"
@@ -17,14 +16,7 @@ type TresorCfg struct {
 }
 
 func StartServices(router *mux.Router) error {
-	cfg := &TresorCfg{}
-
-	ba, err := common.LoadConfigurationFile()
-	if common.Error(err) {
-		return err
-	}
-
-	err = json.Unmarshal(ba, cfg)
+	cfg, err := common.LoadConfigurationFile[TresorCfg]()
 	if common.Error(err) {
 		return err
 	}
