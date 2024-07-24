@@ -13,7 +13,7 @@ require (
 	github.com/go-pg/pg v8.0.7+incompatible
 	github.com/gorilla/mux v1.8.0
 	github.com/lib/pq v1.10.9
-	github.com/mpetavy/common v1.8.45
+	github.com/mpetavy/common v1.8.46
 	github.com/mpetavy/go-dicom v0.0.0-20230223204403-807ccc095cae
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/stretchr/testify v1.9.0
@@ -26,6 +26,7 @@ require (
 	github.com/beevik/etree v1.1.4 // indirect
 	github.com/creack/goselect v0.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/dlclark/regexp2 v1.11.2 // indirect
 	github.com/dsoprea/go-logging v0.0.0-20200710184922-b02d349568dd // indirect
 	github.com/dsoprea/go-utility/v2 v2.0.0-20221003172846-a3e1774ef349 // indirect
 	github.com/fatih/structtag v1.2.0 // indirect
