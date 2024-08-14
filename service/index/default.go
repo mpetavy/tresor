@@ -192,7 +192,7 @@ func (defaultIndexer *DefaultIndexer) Index(path string, options *Options) (stri
 	if readComplete {
 		buffer, err = os.ReadFile(path)
 	} else {
-		buffer, err = common.ReadHeader(path)
+		buffer, err = common.ReadFileHeader(path)
 	}
 	if common.Error(err) {
 		return mimeType, mapping, thumbnail, fulltext, orientation, err
