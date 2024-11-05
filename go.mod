@@ -19,7 +19,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/unidoc/unipdf/v3 v3.45.0
 	go.mongodb.org/mongo-driver v1.11.6
-	golang.org/x/image v0.18.0
+	golang.org/x/image v0.21.0
 )
 
 require (
