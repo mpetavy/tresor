@@ -136,8 +136,8 @@ github.com/mattn/go-isatty v0.0.18/go.mod h1:W+V8PltTTMOvKvAeJH7IuucS94S2C6jfK/D
 github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe/go.mod h1:wL8QJuTMNUDYhXwkmfOly8iTdp5TEcJFWZD2D7SIkUc=
 github.com/montanaflynn/stats v0.7.0 h1:r3y12KyNxj/Sb/iOE46ws+3mS1+MZca1wlHQFPsY/JU=
 github.com/montanaflynn/stats v0.7.0/go.mod h1:etXPPgVO6n31NxCd9KQUMvCM+ve0ruNzt6R8Bnaayow=
-github.com/mpetavy/common v1.9.21 h1:4mXKsW9OJeRk9gwHxJtZdDQLugu6tZ8au3gtuUq00dA=
-github.com/mpetavy/common v1.9.21/go.mod h1:axIz2Y66qq6IDn6i9MLMFxCPlKAVxn6aYXVvbgCu6HA=
+github.com/mpetavy/common v1.9.22 h1:hMSqBYMJgxM73ygqCI73Fd6tDQB3Rel6YM6OTjUZgvo=
+github.com/mpetavy/common v1.9.22/go.mod h1:axIz2Y66qq6IDn6i9MLMFxCPlKAVxn6aYXVvbgCu6HA=
 github.com/mpetavy/go-dicom v0.0.0-20230223204403-807ccc095cae h1:PjlN0f917VfvxwqjJVvAwyrHZCuNhVAelEsxghfs91M=
 github.com/mpetavy/go-dicom v0.0.0-20230223204403-807ccc095cae/go.mod h1:Ia4O7g73QuYwz4YtHaHKVFuP1aoc3f+Inkhdm5aTxAk=
 github.com/nxadm/tail v1.4.4 h1:DQuhQpB1tVlglWS2hLQ5OV6B5r8aGxSrPc5Qo6uTN78=
