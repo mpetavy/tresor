@@ -2,6 +2,7 @@ package storage
 
 import (
 	"bytes"
+	"github.com/stretchr/testify/require"
 	"io"
 	"strconv"
 	"testing"
@@ -15,7 +16,6 @@ import (
 	"flag"
 
 	"github.com/mpetavy/common"
-	"github.com/stretchr/testify/assert"
 )
 
 var count = flag.Int("count", 100, "amount of documents to test with")
@@ -53,7 +53,7 @@ func TestCreatePath(t *testing.T) {
 		if common.Error(err) {
 			t.Fatal(err)
 		}
-		assert.Equal(t, test.Expected, p)
+		require.Equal(t, test.Expected, p)
 	}
 }
 
@@ -97,7 +97,7 @@ func TestBasicArchive(t *testing.T) {
 					t.Fatal(err)
 				}
 
-				assert.Equal(t, uid.Id, id, "Correct incremented ID")
+				require.Equal(t, uid.Id, id, "Correct incremented ID")
 			}
 
 			v, err := fs.CurrentVersion(uid)
@@ -112,7 +112,7 @@ func TestBasicArchive(t *testing.T) {
 				}
 			}
 
-			assert.Equal(t, v, version, "Correct version")
+			require.Equal(t, v, version, "Correct version")
 		}
 	}
 }
@@ -160,8 +160,8 @@ func TestBasicIO(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, s, w.String(), "Content compare")
-	assert.Equal(t, hs, hl, "Hash compare")
+	require.Equal(t, s, w.String(), "Content compare")
+	require.Equal(t, hs, hl, "Hash compare")
 
 	err = fs.Delete(suid, nil)
 	if common.Error(err) {
@@ -175,7 +175,7 @@ func TestBasicIO(t *testing.T) {
 
 	b := common.FileExists(path)
 
-	assert.Equal(t, false, b, "ShaUID with object shall not exist")
+	require.Equal(t, false, b, "ShaUID with object shall not exist")
 
 	path, err = createShaPath(v.Path, uid.withoutObject(), false, false)
 	if err != nil {
@@ -184,7 +184,7 @@ func TestBasicIO(t *testing.T) {
 
 	b = common.FileExists(path)
 
-	assert.Equal(t, true, b, "ShaUID without object shall exist")
+	require.Equal(t, true, b, "ShaUID without object shall exist")
 
 	err = fs.Delete(uid.withoutObject().String(), nil)
 	if err != nil {
@@ -194,7 +194,7 @@ func TestBasicIO(t *testing.T) {
 	for path != v.Path {
 		b = common.FileExists(path)
 
-		assert.Equal(t, false, b, "ShaUID shall not exist")
+		require.Equal(t, false, b, "ShaUID shall not exist")
 
 		path = filepath.Dir(path)
 	}
@@ -319,13 +319,13 @@ func TestFilestorage(t *testing.T) {
 				if page == deletedPage {
 					_, hash, _, err = fs.Load(m.uid.String(), io.Discard, nil)
 					_, ok := err.(*ErrObjectNotFound)
-					assert.True(t, ok, "load on deleted page gave no error")
+					require.True(t, ok, "load on deleted page gave no error")
 				} else {
 					if err != nil {
 						t.Fatal(err)
 					}
 
-					assert.Equal(t, *m.hash[page], *hash, "hash values are different")
+					require.Equal(t, *m.hash[page], *hash, "hash values are different")
 				}
 			}
 
@@ -341,7 +341,7 @@ func TestFilestorage(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			assert.True(t, ok, "load on deleted page gave no error")
+			require.True(t, ok, "load on deleted page gave no error")
 		}(m)
 	}
 

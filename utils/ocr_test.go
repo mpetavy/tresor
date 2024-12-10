@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/require"
 	"image"
 	"os"
 	"strings"
@@ -9,7 +10,6 @@ import (
 
 	"github.com/fogleman/gg"
 	"github.com/mpetavy/common"
-	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -21,7 +21,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestOcr(t *testing.T) {
-	font := common.Eval(common.IsLinuxOS(), "/usr/share/fonts/TTF/DejaVuSans.ttf", "c:/windows/fonts/Arial.ttf")
+	font := common.Eval(common.IsLinux(), "/usr/share/fonts/TTF/DejaVuSans.ttf", "c:/windows/fonts/Arial.ttf")
 
 	img := image.NewRGBA(image.Rect(0, 0, 1648, 2338))
 
@@ -67,8 +67,8 @@ func TestOcr(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		assert.True(t, strings.Index(txt, msg) != -1, "Must have recognized text "+msg)
-		assert.True(t, i == int(orientation), "Must have recognized orientation")
+		require.True(t, strings.Index(txt, msg) != -1, "Must have recognized text "+msg)
+		require.True(t, i == int(orientation), "Must have recognized orientation")
 
 		fmt.Println(txt)
 		fmt.Printf("Orientation: %d\n", orientation)
