@@ -14,7 +14,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/lib/pq v1.10.9
 	github.com/mpetavy/common v1.9.69
-	github.com/mpetavy/go-dicom v0.0.0-20230223204403-807ccc095cae
+	github.com/mpetavy/go-dicom v0.0.0-20241216175347-39625280639d
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/stretchr/testify v1.9.0
 	github.com/unidoc/unipdf/v3 v3.45.0
