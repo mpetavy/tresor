@@ -1,8 +1,8 @@
 module github.com/mpetavy/tresor
 
-go 1.23
+go 1.23.0
 
-toolchain go1.23.2
+toolchain go1.23.6
 
 require (
 	github.com/chai2010/tiff v0.0.0-20211005095045-4ec2aa243943
@@ -13,7 +13,7 @@ require (
 	github.com/go-pg/pg v8.0.7+incompatible
 	github.com/gorilla/mux v1.8.0
 	github.com/lib/pq v1.10.9
-	github.com/mpetavy/common v1.9.94
+	github.com/mpetavy/common v1.9.95
 	github.com/mpetavy/go-dicom v1.0.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/stretchr/testify v1.9.0
@@ -80,13 +80,13 @@ require (
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
 	go.bug.st/serial v1.5.0 // indirect
-	golang.org/x/crypto v0.32.0 // indirect
+	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/exp v0.0.0-20230425010034-47ecfdc1ba53 // indirect
 	golang.org/x/mod v0.18.0 // indirect
 	golang.org/x/net v0.34.0 // indirect
-	golang.org/x/sync v0.10.0 // indirect
-	golang.org/x/sys v0.29.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/sync v0.12.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/text v0.23.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
